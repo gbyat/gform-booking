@@ -625,6 +625,7 @@ class Admin
                                 <th><?php esc_html_e('Appointment Date & Time', 'gform-booking'); ?></th>
                                 <th><?php esc_html_e('Booking Date', 'gform-booking'); ?></th>
                                 <th><?php esc_html_e('Customer', 'gform-booking'); ?></th>
+                                <th><?php esc_html_e('Participants', 'gform-booking'); ?></th>
                                 <th><?php esc_html_e('Contact', 'gform-booking'); ?></th>
                                 <th><?php esc_html_e('Service', 'gform-booking'); ?></th>
                                 <th><?php esc_html_e('Status', 'gform-booking'); ?></th>
@@ -648,6 +649,8 @@ class Admin
                                 echo '<strong>' . esc_html(date_i18n($time_format, $start_time)) . ' - ' . esc_html(date_i18n($time_format, $end_time)) . '</strong></td>';
                                 echo '<td><small>' . esc_html(date_i18n($date_format . ' ' . $time_format, $created_at)) . '</small></td>';
                                 echo '<td>' . esc_html($appointment['customer_name']) . '</td>';
+                                $participants = isset($appointment['participants']) ? absint($appointment['participants']) : 1;
+                                echo '<td>' . esc_html($participants) . '</td>';
                                 echo '<td><small>' . esc_html($appointment['customer_email']) . '</small>';
                                 if (!empty($appointment['customer_phone'])) {
                                     echo '<br><small>' . esc_html($appointment['customer_phone']) . '</small>';

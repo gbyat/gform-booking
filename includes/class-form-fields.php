@@ -23,13 +23,21 @@ class Form_Fields
      * Display calendar booking field
      *
      * @param string $value Current value.
-     * @param int    $service_id Service ID.
+     * @param int    $service_id Service ID (default/first service).
+     * @param array  $available_service_ids Array of available service IDs (optional).
      * @return string HTML output.
      */
-    public static function render_calendar_field($value = '', $service_id = 0)
+    public static function render_calendar_field($value = '', $service_id = 0, $available_service_ids = array())
     {
         // Get all services.
         $all_services = Service::get_all();
+
+        // If available service IDs provided, filter services.
+        if (!empty($available_service_ids) && is_array($available_service_ids)) {
+            $all_services = array_filter($all_services, function ($service) use ($available_service_ids) {
+                return in_array($service['id'], $available_service_ids);
+            });
+        }
 
         // If no service_id provided and there's only one service, use that.
         if (empty($service_id) && count($all_services) === 1) {
@@ -60,14 +68,12 @@ class Form_Fields
 
         ob_start();
 
-        // Always show service selector.
-        if (count($all_services) > 0) {
+        // Show service selector only if multiple services exist.
+        if (count($all_services) > 1) {
 ?>
             <div class="gf-booking-service-selector" style="margin-bottom: 20px;">
                 <select id="gf-booking-service-select" name="gf_booking_service" class="gf-booking-service-select">
-                    <?php if (count($all_services) > 1): ?>
-                        <option value=""><?php esc_html_e('-- Select a Service --', 'gform-booking'); ?></option>
-                    <?php endif; ?>
+                    <option value=""><?php esc_html_e('-- Select a Service --', 'gform-booking'); ?></option>
                     <?php foreach ($all_services as $service_option): ?>
                         <option value="<?php echo esc_attr($service_option['id']); ?>" <?php selected($service_id, $service_option['id']); ?>>
                             <?php echo esc_html($service_option['name']); ?>

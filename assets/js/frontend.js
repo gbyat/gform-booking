@@ -6,6 +6,32 @@
     'use strict';
 
     $(document).ready(function () {
+        // Handle participants field change - reload slots if a date is already selected.
+        $(document).on('change', 'input[type="number"]', function () {
+            var $calendar = $(this).closest('form').find('.gf-booking-calendar');
+            if ($calendar.length > 0) {
+                var selectedDate = '';
+                var serviceId = $calendar.data('service-id');
+
+                // Find the selected date.
+                if ($calendar.hasClass('gf-booking-month-calendar')) {
+                    var $selectedDay = $calendar.find('.gf-booking-day.selected');
+                    if ($selectedDay.length) {
+                        selectedDate = $selectedDay.data('date');
+                    }
+                } else {
+                    var $dateInput = $calendar.find('.gf-booking-date');
+                    if ($dateInput.length) {
+                        selectedDate = $dateInput.val();
+                    }
+                }
+
+                if (selectedDate) {
+                    loadSlotsForDate($calendar, selectedDate, serviceId);
+                }
+            }
+        });
+
         // Handle service selection change.
         $(document).on('change', '.gf-booking-service-select', function () {
             var $selector = $(this);
@@ -326,7 +352,18 @@
         var $slotsContainer = $calendar.find('.gf-booking-slots');
         var html = '';
 
+        // Get the number of participants from the form (if available).
+        var participants = getParticipantsCount();
+
         $.each(slots, function (index, slot) {
+            // Check if this slot has enough capacity for the requested participants.
+            if (slot.remaining !== undefined && slot.remaining !== null) {
+                if (slot.remaining < participants) {
+                    // Not enough spots for the requested participants.
+                    return true; // Skip this slot (continue to next).
+                }
+            }
+
             var slotType = slot.type || 'time';
             var timeDisplay;
 
@@ -385,6 +422,28 @@
         var date = new Date(dateString + 'T00:00:00');
         var options = { year: 'numeric', month: 'long', day: 'numeric' };
         return date.toLocaleDateString('en-US', options);
+    }
+
+    /**
+     * Get participants count from the form
+     * Looks for number or quantity fields in the form
+     */
+    function getParticipantsCount() {
+        var participants = 1; // Default to 1.
+
+        // Try to find the participants field in the form.
+        // Look for input[type="number"] fields.
+        var $participantsField = $('input[type="number"]').not('.gf-booking-value');
+
+        if ($participantsField.length > 0) {
+            // Take the first number field value as participants (could be improved with specific field ID).
+            var val = parseInt($participantsField.first().val());
+            if (val > 0) {
+                participants = val;
+            }
+        }
+
+        return participants;
     }
 
 })(jQuery);

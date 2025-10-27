@@ -78,6 +78,7 @@ class Database
 			appointment_date date NOT NULL,
 			start_time time NOT NULL,
 			end_time time NOT NULL,
+			participants int(11) NOT NULL DEFAULT 1,
 			status varchar(50) NOT NULL DEFAULT 'confirmed',
 			token varchar(64) NOT NULL,
 			notes text,
@@ -94,6 +95,31 @@ class Database
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
         dbDelta($services_sql);
         dbDelta($appointments_sql);
+
+        // Add participants column if it doesn't exist (migration for existing installations).
+        self::maybe_add_participants_column();
+    }
+
+    /**
+     * Add participants column to appointments table if it doesn't exist
+     */
+    private static function maybe_add_participants_column()
+    {
+        global $wpdb;
+        $table = $wpdb->prefix . 'gf_booking_appointments';
+
+        // Check if participants column exists.
+        $column_exists = $wpdb->get_results(
+            $wpdb->prepare(
+                "SHOW COLUMNS FROM $table LIKE %s",
+                'participants'
+            )
+        );
+
+        if (empty($column_exists)) {
+            // Add participants column.
+            $wpdb->query("ALTER TABLE $table ADD COLUMN participants int(11) NOT NULL DEFAULT 1 AFTER end_time");
+        }
     }
 
     /**

@@ -76,6 +76,7 @@ class Appointment
             'appointment_date' => '',
             'start_time'      => '',
             'end_time'        => '',
+            'participants'    => 1,
             'status'          => 'confirmed',
             'notes'           => '',
             'settings'        => array(),
@@ -96,6 +97,7 @@ class Appointment
             'appointment_date' => sanitize_text_field($data['appointment_date']),
             'start_time'       => sanitize_text_field($data['start_time']),
             'end_time'         => sanitize_text_field($data['end_time']),
+            'participants'     => absint($data['participants']),
             'status'           => sanitize_text_field($data['status']),
             'token'            => $token,
             'notes'            => wp_kses_post($data['notes']),
@@ -159,6 +161,9 @@ class Appointment
         }
         if (isset($data['customer_phone'])) {
             $update_data['customer_phone'] = sanitize_text_field($data['customer_phone']);
+        }
+        if (isset($data['participants'])) {
+            $update_data['participants'] = absint($data['participants']);
         }
         if (isset($data['settings'])) {
             $update_data['settings'] = wp_json_encode($data['settings']);

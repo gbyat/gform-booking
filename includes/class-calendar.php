@@ -325,11 +325,11 @@ class Calendar
 
         $table = $wpdb->prefix . 'gf_booking_appointments';
 
-        // If checking for a specific slot, count overlapping bookings.
+        // If checking for a specific slot, sum up participants from overlapping bookings.
         if ($slot_start && $slot_end) {
             $count = $wpdb->get_var(
                 $wpdb->prepare(
-                    "SELECT COUNT(*) FROM $table 
+                    "SELECT COALESCE(SUM(participants), 0) FROM $table 
 					WHERE service_id = %d 
 					AND appointment_date = %s 
 					AND (status = 'confirmed' OR status = 'changed')
@@ -348,7 +348,7 @@ class Calendar
         // Otherwise, return all bookings for the date.
         $booked = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT start_time, end_time FROM $table 
+                "SELECT start_time, end_time, participants FROM $table 
 				WHERE service_id = %d 
 				AND appointment_date = %s 
 				AND (status = 'confirmed' OR status = 'changed')
@@ -385,12 +385,17 @@ class Calendar
         $slot_type = isset($slot['type']) ? $slot['type'] : 'time';
 
         if ($slot_type === 'full_day' || $slot_type === 'half_day') {
-            // For full/half day slots, check if max participants already booked for the day.
-            $booked_count = $this->get_booked_slots($date);
-            $already_booked = is_array($booked_count) ? count($booked_count) : 0;
-            $remaining = $max_participants - $already_booked;
+            // For full/half day slots, sum participants from all bookings on the day.
+            $booked_slots = $this->get_booked_slots($date);
+            $total_booked = 0;
+            if (is_array($booked_slots)) {
+                foreach ($booked_slots as $slot) {
+                    $total_booked += isset($slot['participants']) ? absint($slot['participants']) : 1;
+                }
+            }
+            $remaining = $max_participants - $total_booked;
 
-            error_log('GF Booking: Full/Half day slot - already booked: ' . $already_booked . ', max: ' . $max_participants . ', remaining: ' . $remaining);
+            error_log('GF Booking: Full/Half day slot - participants booked: ' . $total_booked . ', max: ' . $max_participants . ', remaining: ' . $remaining);
 
             return $remaining > 0 ? $remaining : null;
         }

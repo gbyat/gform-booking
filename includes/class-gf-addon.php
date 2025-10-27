@@ -148,11 +148,28 @@ class GF_Addon extends \GFAddOn
             return $input;
         }
 
-        // Get service ID from field settings.
-        $service_id = isset($field->gfBookingService) ? $field->gfBookingService : 0;
+        // Get service IDs from field settings (support both old and new format).
+        $service_ids = array();
+        if (!empty($field->gfBookingServices) && is_array($field->gfBookingServices)) {
+            $service_ids = array_map('absint', $field->gfBookingServices);
+        } elseif (!empty($field->gfBookingService)) {
+            // Support old single service format.
+            $service_ids = array(absint($field->gfBookingService));
+        }
+
+        // If no services specified, try to get all services.
+        if (empty($service_ids)) {
+            $all_services = Service::get_all();
+            $service_ids = array_map(function ($service) {
+                return $service['id'];
+            }, $all_services);
+        }
+
+        // Use first service ID for rendering (or 0 if none).
+        $first_service_id = !empty($service_ids) ? $service_ids[0] : 0;
 
         // Add hidden input to store the value.
-        $calendar_html = Form_Fields::render_calendar_field($value, $service_id);
+        $calendar_html = Form_Fields::render_calendar_field($value, $first_service_id, $service_ids);
 
         // Wrap in a div with the field ID.
         $calendar_html = '<div class="gf-booking-field-wrapper" data-field-id="' . esc_attr($field->id) . '">' . $calendar_html;
@@ -174,37 +191,65 @@ class GF_Addon extends \GFAddOn
         <script type="text/javascript">
             jQuery(document).ready(function($) {
                 // Add service selection to calendar field settings.
-                fieldSettings['calendar'] = '.label_setting, .admin_label_setting, .visibility_setting, .gf_booking_service_setting, .css_class_setting, .conditional_logic_field_setting, .conditional_logic_page_setting, .conditional_logic_nextbutton_setting, .error_message_setting, .label_placement_setting, .description_setting';
+                fieldSettings['calendar'] = '.label_setting, .admin_label_setting, .visibility_setting, .gf_booking_service_setting, .gf_booking_participants_setting, .css_class_setting, .conditional_logic_field_setting, .conditional_logic_page_setting, .conditional_logic_nextbutton_setting, .error_message_setting, .label_placement_setting, .description_setting';
 
                 // Show/hide service setting based on field type.
                 jQuery(document).on('gform_load_field_settings', function(event, field, form) {
                     if (field.type === 'calendar') {
                         jQuery('.gf_booking_service_setting').show();
-                        jQuery('#gf_booking_service_select').val(field.gfBookingService || '');
+                        jQuery('.gf_booking_participants_setting').show();
+
+                        // Handle multi-select for services.
+                        var selectedServices = field.gfBookingServices || field.gfBookingService || [];
+                        if (!Array.isArray(selectedServices)) {
+                            // Convert old single service to array.
+                            selectedServices = selectedServices ? [selectedServices] : [];
+                        }
+
+                        // Check/uncheck checkboxes based on stored values.
+                        jQuery('.gf_booking_service_checkbox').each(function() {
+                            var serviceId = jQuery(this).data('service-id').toString();
+                            jQuery(this).prop('checked', selectedServices.indexOf(serviceId) !== -1);
+                        });
+
+                        // Populate participants field dropdown.
+                        var participantsSelect = jQuery('#gf_booking_participants_select');
+                        if (participantsSelect.find('option').length <= 1 && form && form.fields) {
+                            jQuery.each(form.fields, function(i, formField) {
+                                // Only add number and quantity fields.
+                                if (formField.type === 'number' || formField.type === 'quantity') {
+                                    participantsSelect.append('<option value="' + formField.id + '">' + formField.label + ' (ID: ' + formField.id + ')</option>');
+                                }
+                            });
+                        }
+
+                        jQuery('#gf_booking_participants_select').val(field.gfBookingParticipantsField || '');
                     } else {
                         jQuery('.gf_booking_service_setting').hide();
+                        jQuery('.gf_booking_participants_setting').hide();
                     }
                 });
 
-                // Populate services dropdown.
-                bindCalendarServiceSetting();
+                // Bind event handlers for services and participants.
+                bindCalendarSettings();
 
-                function bindCalendarServiceSetting() {
-                    $(document).on('change', '.gf_booking_service_select', function() {
-                        SetFieldProperty('gfBookingService', this.value);
+                function bindCalendarSettings() {
+                    // Handle service checkbox changes.
+                    $(document).on('change', '.gf_booking_service_checkbox', function() {
+                        var selectedServices = [];
+                        jQuery('.gf_booking_service_checkbox:checked').each(function() {
+                            selectedServices.push(jQuery(this).val());
+                        });
+                        SetFieldProperty('gfBookingServices', selectedServices);
+                    });
+
+                    // Handle participants field selection.
+                    $(document).on('change', '.gf_booking_participants_select', function() {
+                        SetFieldProperty('gfBookingParticipantsField', this.value);
                     });
                 }
 
-                // Populate select on load.
-                setTimeout(function() {
-                    var services = <?php echo json_encode(Service::get_all()); ?>;
-                    var select = $('.gf_booking_service_select');
-                    if (select.length && select.find('option').length <= 1) {
-                        $.each(services, function(i, service) {
-                            select.append('<option value="' + service.id + '">' + service.name + '</option>');
-                        });
-                    }
-                }, 100);
+                // Services checkboxes are already populated in PHP.
             });
         </script>
         <?php
@@ -303,6 +348,18 @@ class GF_Addon extends \GFAddOn
             }
         }
 
+        // Look for participants field - first check if explicitly set in calendar field settings.
+        $participants = 1; // Default to 1.
+
+        if (!empty($calendar_field->gfBookingParticipantsField)) {
+            // Use the explicitly set participants field.
+            $participants_field_id = absint($calendar_field->gfBookingParticipantsField);
+            $participants_value = rgar($entry, $participants_field_id);
+            if (!empty($participants_value)) {
+                $participants = max(1, absint($participants_value));
+            }
+        }
+
         // Fallback: if no name found, use email or a generic value.
         if (empty($name)) {
             $name = $email ?: __('Customer', 'gform-booking');
@@ -323,6 +380,7 @@ class GF_Addon extends \GFAddOn
                 'appointment_date' => $appointment_date,
                 'start_time'       => $start_time,
                 'end_time'         => $end_time,
+                'participants'     => $participants,
             )
         );
 
@@ -356,18 +414,35 @@ class GF_Addon extends \GFAddOn
         ?>
             <li class="gf_booking_service_setting field_setting" style="display:none;">
                 <label for="gf_booking_service_select" class="section_label">
-                    <?php esc_html_e('Service', 'gform-booking'); ?>
+                    <?php esc_html_e('Available Services', 'gform-booking'); ?>
                     <?php gform_tooltip('gf_booking_service'); ?>
                 </label>
-                <select id="gf_booking_service_select" class="gf_booking_service_select" onchange="SetFieldProperty('gfBookingService', this.value);">
-                    <option value=""><?php esc_html_e('Select a service', 'gform-booking'); ?></option>
+                <p class="description" style="margin-bottom: 8px;"><?php esc_html_e('Select one or more services. Users will be able to choose from these services.', 'gform-booking'); ?></p>
+                <div id="gf_booking_services_list" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
                     <?php
                     $services = Service::get_all();
+                    $selected_services = array(); // Will be populated by JavaScript
                     foreach ($services as $service) {
-                        echo '<option value="' . esc_attr($service['id']) . '">' . esc_html($service['name']) . '</option>';
+                        echo '<label style="display: block; margin: 5px 0;">';
+                        echo '<input type="checkbox" class="gf_booking_service_checkbox" value="' . esc_attr($service['id']) . '" data-service-id="' . esc_attr($service['id']) . '"> ';
+                        echo esc_html($service['name']);
+                        echo '</label>';
+                    }
+                    if (empty($services)) {
+                        echo '<p style="color: #d54e21;">' . esc_html__('No services available. Please create services first.', 'gform-booking') . '</p>';
                     }
                     ?>
+                </div>
+                <input type="hidden" id="gf_booking_service_ids" name="gf_booking_service_ids">
+            </li>
+            <li class="gf_booking_participants_setting field_setting" style="display:none;">
+                <label for="gf_booking_participants_select" class="section_label">
+                    <?php esc_html_e('Participants Field', 'gform-booking'); ?>
+                </label>
+                <select id="gf_booking_participants_select" class="gf_booking_participants_select" onchange="SetFieldProperty('gfBookingParticipantsField', this.value);">
+                    <option value=""><?php esc_html_e('None (default: 1)', 'gform-booking'); ?></option>
                 </select>
+                <p class="description"><?php esc_html_e('Select a number field to use for the number of participants. If not set, defaults to 1.', 'gform-booking'); ?></p>
             </li>
 <?php
         }
