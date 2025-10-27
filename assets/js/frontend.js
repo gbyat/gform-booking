@@ -340,6 +340,12 @@
 
             html += '<div class="gf-booking-slot gf-booking-slot-' + slotType + '" data-time="' + slot.start + '" data-type="' + slotType + '">';
             html += timeDisplay;
+
+            // Add remaining spots information if available.
+            if (slot.remaining !== undefined) {
+                html += ' <span class="gf-booking-spots-remaining">(' + slot.remaining + ' ' + (slot.remaining === 1 ? 'spot' : 'spots') + ' left)</span>';
+            }
+
             html += '</div>';
         });
 

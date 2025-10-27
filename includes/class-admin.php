@@ -374,6 +374,16 @@ class Admin
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row"><label for="max_participants"><?php esc_html_e('Max Participants per Slot', 'gform-booking'); ?></label></th>
+                        <td>
+                            <?php
+                            $max_participants = isset($settings['max_participants']) ? $settings['max_participants'] : 1;
+                            ?>
+                            <input type="number" id="max_participants" name="max_participants" value="<?php echo esc_attr($max_participants); ?>" min="1" step="1">
+                            <p class="description"><?php esc_html_e('Maximum number of people that can book the same time slot. Set to 1 for exclusive slots.', 'gform-booking'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row"><label for="calendar_type"><?php esc_html_e('Calendar View', 'gform-booking'); ?></label></th>
                         <td>
                             <select id="calendar_type" name="calendar_type">
@@ -754,9 +764,13 @@ class Admin
             $email_from_name = sanitize_text_field($_POST['email_from_name']);
             $email_from_email = sanitize_email($_POST['email_from_email']);
 
+            // Max participants setting.
+            $max_participants = isset($_POST['max_participants']) ? absint($_POST['max_participants']) : 1;
+
             $settings = array(
                 'slot_type' => $slot_type,
                 'calendar_type' => $calendar_type,
+                'max_participants' => $max_participants,
                 'has_lunch_break' => $has_lunch_break,
                 'lunch_break_start' => $lunch_break_start,
                 'lunch_break_end' => $lunch_break_end,

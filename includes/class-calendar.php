@@ -74,13 +74,13 @@ class Calendar
             return array();
         }
 
-        // Get booked appointments for this date.
-        $booked_slots = $this->get_booked_slots($date);
-
-        // Filter out booked slots.
+        // Filter out fully booked slots and add availability info.
         $available_slots = array();
         foreach ($all_slots as $slot) {
-            if (! $this->is_slot_booked($slot, $booked_slots)) {
+            $remaining = $this->get_slot_availability($slot, $date);
+            if ($remaining !== null) {
+                // Add remaining spots information to the slot.
+                $slot['remaining'] = $remaining;
                 $available_slots[] = $slot;
             }
         }
@@ -315,15 +315,37 @@ class Calendar
      * Get booked slots for a specific date
      *
      * @param string $date Date in Y-m-d format.
-     * @return array Array of booked slots.
+     * @param string $slot_start Start time of the slot to check (optional).
+     * @param string $slot_end End time of the slot to check (optional).
+     * @return int Number of overlapping bookings for the specified slot, or all bookings if no slot specified.
      */
-    private function get_booked_slots($date)
+    private function get_booked_slots($date, $slot_start = null, $slot_end = null)
     {
         global $wpdb;
 
         $table = $wpdb->prefix . 'gf_booking_appointments';
 
-        // Include both 'confirmed' and 'changed' status - both mean the slot is taken.
+        // If checking for a specific slot, count overlapping bookings.
+        if ($slot_start && $slot_end) {
+            $count = $wpdb->get_var(
+                $wpdb->prepare(
+                    "SELECT COUNT(*) FROM $table 
+					WHERE service_id = %d 
+					AND appointment_date = %s 
+					AND (status = 'confirmed' OR status = 'changed')
+					AND start_time < %s 
+					AND end_time > %s",
+                    $this->service_id,
+                    $date,
+                    $slot_end,
+                    $slot_start
+                )
+            );
+
+            return absint($count);
+        }
+
+        // Otherwise, return all bookings for the date.
         $booked = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT start_time, end_time FROM $table 
@@ -347,37 +369,39 @@ class Calendar
     }
 
     /**
-     * Check if a time slot is already booked
+     * Check if a time slot is already booked and return number of remaining spots
      *
      * @param array $slot Time slot to check.
-     * @param array $booked_slots Array of booked slots.
-     * @return bool
+     * @param string $date Date in Y-m-d format.
+     * @return int|null Returns number of remaining spots, or null if fully booked.
      */
-    private function is_slot_booked($slot, $booked_slots)
+    private function get_slot_availability($slot, $date)
     {
-        if (empty($booked_slots)) {
-            return false;
+        $service = new Service($this->service_id);
+        $settings = $service->get('settings');
+        $max_participants = isset($settings['max_participants']) ? absint($settings['max_participants']) : 1;
+
+        // For full day or half day slots, check if any part overlaps.
+        $slot_type = isset($slot['type']) ? $slot['type'] : 'time';
+
+        if ($slot_type === 'full_day' || $slot_type === 'half_day') {
+            // For full/half day slots, check if max participants already booked for the day.
+            $booked_count = $this->get_booked_slots($date);
+            $already_booked = is_array($booked_count) ? count($booked_count) : 0;
+            $remaining = $max_participants - $already_booked;
+
+            error_log('GF Booking: Full/Half day slot - already booked: ' . $already_booked . ', max: ' . $max_participants . ', remaining: ' . $remaining);
+
+            return $remaining > 0 ? $remaining : null;
         }
 
-        foreach ($booked_slots as $booked_slot) {
-            // For full day or half day slots, check if any part overlaps.
-            $slot_type = isset($slot['type']) ? $slot['type'] : 'time';
+        // For time-based slots, count overlapping bookings.
+        $booked_count = $this->get_booked_slots($date, $slot['start'], $slot['end']);
+        $remaining = $max_participants - $booked_count;
 
-            if ($slot_type === 'full_day' || $slot_type === 'half_day') {
-                // If there's any booking on this day, the full/half day slot is taken.
-                error_log('GF Booking: Full/Half day slot overlaps with booking (any booking on day makes it unavailable)');
-                return true;
-            }
+        error_log('GF Booking: Time slot ' . $slot['start'] . '-' . $slot['end'] . ' - already booked: ' . $booked_count . ', max: ' . $max_participants . ', remaining: ' . $remaining);
 
-            // Check for time overlap.
-            $overlaps = $slot['start'] < $booked_slot['end_time'] && $slot['end'] > $booked_slot['start_time'];
-            if ($overlaps) {
-                error_log('GF Booking: Slot ' . $slot['start'] . '-' . $slot['end'] . ' overlaps with booked slot ' . $booked_slot['start_time'] . '-' . $booked_slot['end_time'] . ' - MARKED AS BOOKED');
-                return true;
-            }
-        }
-
-        return false;
+        return $remaining > 0 ? $remaining : null;
     }
 
     /**
