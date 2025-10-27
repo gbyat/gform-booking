@@ -266,6 +266,29 @@ class Autoloader
             wp_die(__('Invalid or expired token.', 'gform-booking'));
         }
 
+        // Handle modification if requested.
+        if (isset($_POST['modify_appointment']) && $_POST['modify_appointment'] === 'yes') {
+            $new_date = isset($_POST['new_date']) ? sanitize_text_field($_POST['new_date']) : '';
+            $new_time = isset($_POST['new_time']) ? sanitize_text_field($_POST['new_time']) : '';
+
+            if ($new_date && $new_time) {
+                $result = $appointment->modify($new_date, $new_time);
+
+                if (is_wp_error($result)) {
+                    // Rate limit or other error.
+                    $error_message = $result->get_error_message();
+                } elseif ($result) {
+                    // Reload appointment to get updated data.
+                    $appointment = new Appointment($appointment_id);
+                    $success_message = __('Your appointment has been modified. A confirmation email has been sent.', 'gform-booking');
+                } else {
+                    $error_message = __('Failed to modify appointment. Please try again.', 'gform-booking');
+                }
+            } else {
+                $error_message = __('Please select a new date and time.', 'gform-booking');
+            }
+        }
+
         // Handle cancellation if requested.
         if (isset($_POST['cancel_appointment']) && $_POST['cancel_appointment'] === 'yes') {
             if ($appointment->cancel()) {
@@ -316,7 +339,7 @@ class Autoloader
                 </div>
             <?php endif; ?>
 
-            <?php if ($status === 'confirmed'): ?>
+            <?php if ($status === 'confirmed' || $status === 'changed'): ?>
                 <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin: 20px 0;">
                     <h2><?php esc_html_e('Appointment Details', 'gform-booking'); ?></h2>
                     <p><strong><?php esc_html_e('Name:', 'gform-booking'); ?></strong> <?php echo esc_html($appointment->get('customer_name')); ?></p>
@@ -324,6 +347,63 @@ class Autoloader
                     <p><strong><?php esc_html_e('Time:', 'gform-booking'); ?></strong> <?php echo esc_html($start_time); ?> - <?php echo esc_html($end_time); ?></p>
                 </div>
 
+                <?php if ($status === 'confirmed' || $status === 'changed'): ?>
+                    <div style="margin: 30px 0; padding: 20px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 3px;">
+                        <h2><?php esc_html_e('Modify Appointment', 'gform-booking'); ?></h2>
+                        <p><?php esc_html_e('Need to change your appointment? Select a new date and time below.', 'gform-booking'); ?></p>
+
+                        <?php
+                        // Render calendar for date selection.
+                        wp_enqueue_style('gf-booking-frontend');
+                        wp_enqueue_script('gf-booking-frontend');
+                        wp_localize_script('gf-booking-frontend', 'gfBooking', array(
+                            'ajaxUrl' => admin_url('admin-ajax.php'),
+                            'nonce' => wp_create_nonce('gf_booking_nonce'),
+                            'timeFormat' => get_option('time_format'),
+                            'strings' => array(
+                                'loading' => __('Loading...', 'gform-booking'),
+                                'noSlots' => __('No available time slots', 'gform-booking'),
+                                'error' => __('An error occurred. Please try again.', 'gform-booking'),
+                            ),
+                        ));
+
+                        echo \GFormBooking\Form_Fields::render_calendar_field('', $appointment->get('service_id'));
+                        ?>
+
+                        <form method="post" id="gf-booking-modify-form" style="display: none; margin-top: 20px;">
+                            <input type="hidden" name="modify_appointment" value="yes">
+                            <input type="hidden" name="new_date" id="gf-booking-new-date">
+                            <input type="hidden" name="new_time" id="gf-booking-new-time">
+                            <button type="submit" style="background: #0073aa; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
+                                <?php esc_html_e('Confirm New Appointment Time', 'gform-booking'); ?>
+                            </button>
+                        </form>
+
+                        <script type="text/javascript">
+                            jQuery(document).ready(function($) {
+                                // Listen for time slot selection.
+                                $(document).on('gf-booking-time-selected', function(e, time) {
+                                    var $calendar = $('.gf-booking-calendar');
+                                    var selectedDate = '';
+
+                                    if ($calendar.hasClass('gf-booking-month-calendar')) {
+                                        selectedDate = $calendar.find('.gf-booking-day.selected').data('date');
+                                    } else {
+                                        selectedDate = $calendar.find('.gf-booking-date').val();
+                                    }
+
+                                    if (selectedDate && time) {
+                                        $('#gf-booking-new-date').val(selectedDate);
+                                        $('#gf-booking-new-time').val(time);
+                                        $('#gf-booking-modify-form').show();
+                                    }
+                                });
+                            });
+                        </script>
+                    </div>
+                <?php endif; ?>
+
+                <!-- Cancel button: Show for both 'confirmed' and 'changed' status -->
                 <form method="post" style="margin: 20px 0;">
                     <h2><?php esc_html_e('Cancel Appointment', 'gform-booking'); ?></h2>
                     <p><?php esc_html_e('If you need to cancel your appointment, please click the button below. You can always book a new appointment if needed.', 'gform-booking'); ?></p>

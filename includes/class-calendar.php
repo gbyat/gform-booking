@@ -323,12 +323,13 @@ class Calendar
 
         $table = $wpdb->prefix . 'gf_booking_appointments';
 
+        // Include both 'confirmed' and 'changed' status - both mean the slot is taken.
         $booked = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT start_time, end_time FROM $table 
 				WHERE service_id = %d 
 				AND appointment_date = %s 
-				AND status = 'confirmed'
+				AND (status = 'confirmed' OR status = 'changed')
 				ORDER BY start_time ASC",
                 $this->service_id,
                 $date

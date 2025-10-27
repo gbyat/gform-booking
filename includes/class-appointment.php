@@ -258,14 +258,122 @@ class Appointment
     }
 
     /**
+     * Send modification notification email to admin and customer
+     *
+     * @param int    $appointment_id Appointment ID.
+     * @param string $token Security token.
+     */
+    private static function send_modification_notification($appointment_id, $token)
+    {
+        $appointment = new Appointment($appointment_id);
+
+        if (! $appointment->exists()) {
+            return;
+        }
+
+        // Get the user to notify from service settings.
+        $service = new \GFormBooking\Service($appointment->get('service_id'));
+        $settings = $service->exists() ? $service->get('settings') : array();
+        $notify_user_id = isset($settings['notify_user_id']) ? absint($settings['notify_user_id']) : 0;
+
+        // Get user email (default to admin_email).
+        if ($notify_user_id > 0) {
+            $user = get_userdata($notify_user_id);
+            $admin_to = $user ? $user->user_email : get_option('admin_email');
+        } else {
+            $admin_to = get_option('admin_email');
+        }
+
+        // Get service name.
+        $service_name = $service->exists() ? $service->get('name') : __('N/A', 'gform-booking');
+
+        $date_format = get_option('date_format');
+        $time_format = get_option('time_format');
+
+        $appointment_date = date_i18n($date_format, strtotime($appointment->get('appointment_date')));
+        $start_time = date_i18n($time_format, strtotime($appointment->get('start_time')));
+        $end_time = date_i18n($time_format, strtotime($appointment->get('end_time')));
+
+        // Get email sender from service settings.
+        $from_name = isset($settings['email_from_name']) ? $settings['email_from_name'] : get_bloginfo('name');
+        $from_email = isset($settings['email_from_email']) ? $settings['email_from_email'] : get_option('admin_email');
+
+        // Send notification to admin.
+        $admin_subject = sprintf(
+            /* translators: %s: Site name */
+            __('Appointment Modified - %s', 'gform-booking'),
+            get_bloginfo('name')
+        );
+
+        $admin_message = sprintf(
+            /* translators: %1$s: Customer name, %2$s: Email, %3$s: Phone, %4$s: Date, %5$s: Time, %6$s: Service */
+            __("An appointment has been modified:\n\nCustomer: %1\$s\nEmail: %2\$s\nPhone: %3\$s\nNew Date: %4\$s\nNew Time: %5\$s - %6\$s\nService: %7\$s", 'gform-booking'),
+            $appointment->get('customer_name'),
+            $appointment->get('customer_email'),
+            $appointment->get('customer_phone') ?: __('Not provided', 'gform-booking'),
+            $appointment_date,
+            $start_time,
+            $end_time,
+            $service_name
+        );
+
+        $admin_headers = array(
+            'Content-Type: text/plain; charset=UTF-8',
+            'From: ' . $from_name . ' <' . $from_email . '>'
+        );
+
+        wp_mail($admin_to, $admin_subject, $admin_message, $admin_headers);
+
+        // Send confirmation to customer.
+        $confirmation = new Confirmation();
+        $confirmation->send_appointment_confirmation($appointment, $token);
+    }
+
+    /**
      * Modify appointment date/time
      *
      * @param string $new_date New date.
      * @param string $new_time New time.
-     * @return bool
+     * @return bool|WP_Error True on success, WP_Error on failure.
      */
     public function modify($new_date, $new_time)
     {
+        // Check rate limit: max 1 modification per 5 minutes, max 5 modifications total.
+        $settings = $this->get('settings');
+        if (empty($settings)) {
+            $settings = array();
+        }
+
+        // Check modification count (max 5).
+        $modification_count = isset($settings['modification_count']) ? absint($settings['modification_count']) : 0;
+        if ($modification_count >= 5) {
+            return new \WP_Error(
+                'max_modifications_exceeded',
+                __('Maximum number of modifications (5) reached for this appointment. Please contact support if you need further changes.', 'gform-booking')
+            );
+        }
+
+        // Check time limit: min 5 minutes between modifications.
+        if (isset($settings['last_modification'])) {
+            $last_modification = absint($settings['last_modification']);
+            $current_time = time();
+            $time_diff = $current_time - $last_modification;
+            $minutes_since_modification = $time_diff / 60;
+
+            if ($minutes_since_modification < 5) {
+                // Less than 5 minutes since last modification.
+                $minutes_remaining = ceil(5 - $minutes_since_modification);
+                return new \WP_Error(
+                    'rate_limit_exceeded',
+                    sprintf(
+                        /* translators: %d: minutes remaining */
+                        __('Please wait %d more minutes before modifying your appointment again.', 'gform-booking'),
+                        $minutes_remaining
+                    )
+                );
+            }
+        }
+
         // Calculate end time based on original duration.
         $start = strtotime($this->get('start_time'));
         $end = strtotime($this->get('end_time'));
@@ -273,13 +381,29 @@ class Appointment
 
         $new_end = date('H:i:s', strtotime($new_time) + $duration);
 
-        return $this->update(
+        // Keep the original token - don't change it.
+        $current_token = $this->get('token');
+
+        // Update modification tracking.
+        $settings['last_modification'] = time();
+        $settings['modification_count'] = isset($settings['modification_count']) ? absint($settings['modification_count']) + 1 : 1;
+
+        $result = $this->update(
             array(
                 'appointment_date' => $new_date,
                 'start_time'       => $new_time,
                 'end_time'         => $new_end,
+                'status'           => 'changed',
+                'settings'         => $settings,
             )
         );
+
+        // Send modification notification emails.
+        if ($result) {
+            self::send_modification_notification($this->id, $current_token);
+        }
+
+        return $result;
     }
 
     /**
