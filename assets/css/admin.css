@@ -1,0 +1,48 @@
+/**
+ * GF Booking - Admin Styles
+ */
+
+.gf-booking-stats {
+	display: flex;
+	gap: 20px;
+	margin: 20px 0;
+}
+
+.gf-booking-stats .stat-box {
+	flex: 1;
+	background: #fff;
+	border: 1px solid #ddd;
+	padding: 20px;
+	border-radius: 4px;
+	text-align: center;
+}
+
+.gf-booking-stats .stat-box h3 {
+	margin: 0 0 10px;
+	font-size: 36px;
+	color: #0073aa;
+}
+
+.gf-booking-stats .stat-box p {
+	margin: 0;
+	color: #666;
+	font-size: 14px;
+}
+
+.gf-booking-services table th,
+.gf-booking-appointments table th {
+	font-weight: 600;
+}
+
+.status-confirmed {
+	color: #46b450;
+}
+
+.status-cancelled {
+	color: #dc3232;
+}
+
+.status-past {
+	color: #999;
+	font-style: italic;
+}

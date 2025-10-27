@@ -1,0 +1,147 @@
+[27-Oct-2025 12:31:53 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 12:31:53 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 12:31:53 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 3 booked slots
+[27-Oct-2025 12:31:53 UTC] GF Booking: Booked slots: [{"start_time":"10:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"}]
+[27-Oct-2025 12:31:56 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 3 booked slots
+[27-Oct-2025 12:31:56 UTC] GF Booking: Booked slots: [{"start_time":"10:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"}]
+[27-Oct-2025 12:31:58 UTC] GF Booking: Field value from entry: 2025-10-30|11:00:00
+[27-Oct-2025 12:31:58 UTC] GF Booking: Parsed parts: ["2025-10-30","11:00:00"]
+[27-Oct-2025 12:31:58 UTC] GF Booking: Date: 2025-10-30, Start time: 11:00:00
+[27-Oct-2025 12:31:58 UTC] GF Booking: Attempting to create appointment. Date: 2025-10-30, Time: 11:00:00, Service: 1
+[27-Oct-2025 12:31:59 UTC] GF Booking: Appointment created successfully. ID: 4
+[27-Oct-2025 12:32:02 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 12:32:02 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 12:32:02 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 4 booked slots
+[27-Oct-2025 12:32:02 UTC] GF Booking: Booked slots: [{"start_time":"10:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 12:32:02 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 12:32:05 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 4 booked slots
+[27-Oct-2025 12:32:05 UTC] GF Booking: Booked slots: [{"start_time":"10:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 12:32:05 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 12:48:06 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 12:48:06 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 12:48:06 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 3 booked slots
+[27-Oct-2025 12:48:06 UTC] GF Booking: Booked slots: [{"start_time":"10:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 12:48:06 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 12:48:35 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 12:48:35 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 12:48:35 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 2 booked slots
+[27-Oct-2025 12:48:35 UTC] GF Booking: Booked slots: [{"start_time":"10:00:00","end_time":"01:00:00"},{"start_time":"11:00:00","end_time":"01:00:00"}]
+[27-Oct-2025 12:58:12 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 12:58:12 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 12:58:12 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:02 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:02 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:02 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-03, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-04, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-05, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-06, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-10, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-11, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-12, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-13, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-17, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-18, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-19, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-20, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-25, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-26, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:08 UTC] GF Booking: get_booked_slots for date 2025-11-27, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:10 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:10 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart_Session-&gt;get_cart_for_session, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:10 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart-&gt;calculate_totals, WC_Cart-&gt;is_empty, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:10 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart-&gt;calculate_totals, WC_Cart_Session-&gt;set_session, WC_Cart_Session-&gt;get_cart_for_session, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:10 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart-&gt;calculate_totals, WC_Cart_Session-&gt;set_session, WC_Cart_Session-&gt;cart_has_shippable_products, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:10 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart_contents_weight, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:11 UTC] GF Booking: get_booked_slots for date 2025-11-12, service_id 1, found 0 booked slots
+[27-Oct-2025 12:59:15 UTC] GF Booking: Field value from entry: 2025-11-12|11:00:00
+[27-Oct-2025 12:59:15 UTC] GF Booking: Parsed parts: ["2025-11-12","11:00:00"]
+[27-Oct-2025 12:59:15 UTC] GF Booking: Date: 2025-11-12, Start time: 11:00:00
+[27-Oct-2025 12:59:15 UTC] GF Booking: Attempting to create appointment. Date: 2025-11-12, Time: 11:00:00, Service: 1
+[27-Oct-2025 12:59:15 UTC] GF Booking: Appointment created successfully. ID: 5
+[27-Oct-2025 12:59:34 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:34 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart_Session-&gt;get_cart_for_session, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:34 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart-&gt;calculate_totals, WC_Cart-&gt;is_empty, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:34 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart-&gt;calculate_totals, WC_Cart_Session-&gt;set_session, WC_Cart_Session-&gt;get_cart_for_session, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:34 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart, WC_Cart_Session-&gt;get_cart_from_session, WC_Cart-&gt;calculate_totals, WC_Cart_Session-&gt;set_session, WC_Cart_Session-&gt;cart_has_shippable_products, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 12:59:34 UTC] PHP Notice:  Die Funktion get_cart wurde <strong>fehlerhaft</strong> aufgerufen. Get cart should not be called before the wp_loaded action. Backtrace: require('wp-blog-header.php'), require_once('wp-load.php'), require_once('wp-config.php'), require_once('wp-settings.php'), do_action('init'), WP_Hook-&gt;do_action, WP_Hook-&gt;apply_filters, CKTWOO_Public-&gt;init_mixed_fields, CKTWOO_Public-&gt;process_section_fields, CKTWOO_Admin-&gt;get_default_woocommerce_fields, WC_Countries-&gt;get_address_fields, apply_filters('woocommerce_billing_fields'), WP_Hook-&gt;apply_filters, THWCFE_Public_Checkout-&gt;woo_billing_fields, THWCFE_Utils::get_fieldset_to_show, THWCFE_Utils::get_cart_summary, WC_Cart-&gt;get_cart_contents_weight, WC_Cart-&gt;get_cart, wc_doing_it_wrong Weitere Informationen: <a href="https://developer.wordpress.org/advanced-administration/debug/debug-wordpress/">Debugging in WordPress (engl.)</a>. (Diese Meldung wurde in Version 2.3 hinzugefügt.) in /www/htdocs/w0156460/zimmfse/wp-includes/functions.php on line 6121
+[27-Oct-2025 13:00:35 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:35 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:35 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-03, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-04, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-05, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-06, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-10, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-11, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-12, service_id 1, found 1 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: Booked slots: [{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 13:00:38 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-13, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-17, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-18, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-19, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-20, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-25, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-26, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:38 UTC] GF Booking: get_booked_slots for date 2025-11-27, service_id 1, found 0 booked slots
+[27-Oct-2025 13:00:40 UTC] GF Booking: get_booked_slots for date 2025-11-12, service_id 1, found 1 booked slots
+[27-Oct-2025 13:00:40 UTC] GF Booking: Booked slots: [{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 13:00:40 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 13:01:19 UTC] PHP Deprecated:  html_entity_decode(): Passing null to parameter #1 ($string) of type string is deprecated in /www/htdocs/w0156460/zimmfse/wp-includes/widgets.php on line 1638
+[27-Oct-2025 13:01:19 UTC] PHP Deprecated:  html_entity_decode(): Passing null to parameter #1 ($string) of type string is deprecated in /www/htdocs/w0156460/zimmfse/wp-includes/widgets.php on line 1638
+[27-Oct-2025 13:01:19 UTC] PHP Deprecated:  html_entity_decode(): Passing null to parameter #1 ($string) of type string is deprecated in /www/htdocs/w0156460/zimmfse/wp-includes/widgets.php on line 1638
+[27-Oct-2025 13:01:24 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:01:24 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:01:24 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 13:02:43 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:02:43 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:02:43 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 13:03:45 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:03:45 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:03:45 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 13:03:54 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 13:03:57 UTC] GF Booking: Field value from entry: 2025-10-30|11:00:00
+[27-Oct-2025 13:03:57 UTC] GF Booking: Parsed parts: ["2025-10-30","11:00:00"]
+[27-Oct-2025 13:03:57 UTC] GF Booking: Date: 2025-10-30, Start time: 11:00:00
+[27-Oct-2025 13:03:57 UTC] GF Booking: Attempting to create appointment. Date: 2025-10-30, Time: 11:00:00, Service: 1
+[27-Oct-2025 13:03:57 UTC] GF Booking: Appointment created successfully. ID: 6
+[27-Oct-2025 13:14:03 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:14:03 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:14:03 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 1 booked slots
+[27-Oct-2025 13:14:03 UTC] GF Booking: Booked slots: [{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 13:14:03 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 13:14:13 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:14:13 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:14:13 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 1 booked slots
+[27-Oct-2025 13:14:13 UTC] GF Booking: Booked slots: [{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 13:14:13 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 13:14:42 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:14:42 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:14:42 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 13:15:16 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 0 booked slots
+[27-Oct-2025 13:15:19 UTC] GF Booking: Field value from entry: 2025-10-30|11:00:00
+[27-Oct-2025 13:15:19 UTC] GF Booking: Parsed parts: ["2025-10-30","11:00:00"]
+[27-Oct-2025 13:15:19 UTC] GF Booking: Date: 2025-10-30, Start time: 11:00:00
+[27-Oct-2025 13:15:19 UTC] GF Booking: Attempting to create appointment. Date: 2025-10-30, Time: 11:00:00, Service: 1
+[27-Oct-2025 13:15:20 UTC] GF Booking: Appointment created successfully. ID: 7
+[27-Oct-2025 13:17:38 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:17:38 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:17:38 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 1 booked slots
+[27-Oct-2025 13:17:38 UTC] GF Booking: Booked slots: [{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 13:17:38 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 13:23:48 UTC] GF Booking: get_booked_slots for date 2025-10-28, service_id 1, found 0 booked slots
+[27-Oct-2025 13:23:48 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:23:48 UTC] GF Booking: get_booked_slots for date 2025-10-30, service_id 1, found 1 booked slots
+[27-Oct-2025 13:23:48 UTC] GF Booking: Booked slots: [{"start_time":"11:00:00","end_time":"12:00:00"}]
+[27-Oct-2025 13:23:48 UTC] GF Booking: Slot 11:00:00-12:00:00 overlaps with booked slot 11:00:00-12:00:00
+[27-Oct-2025 13:23:53 UTC] GF Booking: get_booked_slots for date 2025-10-29, service_id 1, found 0 booked slots
+[27-Oct-2025 13:23:58 UTC] GF Booking: Field value from entry: 2025-10-29|11:00:00
+[27-Oct-2025 13:23:58 UTC] GF Booking: Parsed parts: ["2025-10-29","11:00:00"]
+[27-Oct-2025 13:23:58 UTC] GF Booking: Date: 2025-10-29, Start time: 11:00:00
+[27-Oct-2025 13:23:58 UTC] GF Booking: Attempting to create appointment. Date: 2025-10-29, Time: 11:00:00, Service: 1
+[27-Oct-2025 13:23:58 UTC] GF Booking: Sending confirmation email to: testerin@gby.at
+[27-Oct-2025 13:23:58 UTC] GF Booking: Email sent: yes
+[27-Oct-2025 13:23:58 UTC] GF Booking: Sending admin notification to: gaby@gby.at
+[27-Oct-2025 13:23:58 UTC] GF Booking: Admin notification sent: yes
+[27-Oct-2025 13:23:58 UTC] GF Booking: Appointment created successfully. ID: 8
