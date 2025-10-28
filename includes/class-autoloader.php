@@ -81,6 +81,9 @@ class Autoloader
 
         // Public appointment management page.
         add_action('template_redirect', array(__CLASS__, 'handle_public_management'));
+
+        // iCal download handler.
+        add_action('template_redirect', array(__CLASS__, 'handle_ical_download'));
     }
 
     /**
@@ -320,6 +323,7 @@ class Autoloader
         $start_time = date_i18n($time_format, strtotime($appointment->get('start_time')));
         $end_time = date_i18n($time_format, strtotime($appointment->get('end_time')));
         $status = $appointment->get('status');
+        $participants = $appointment->get('participants') ?: 1;
 
         // Load active theme for proper styling.
         get_header();
@@ -424,6 +428,45 @@ class Autoloader
         </div>
     <?php
         get_footer();
+    }
+
+    /**
+     * Handle iCal download
+     */
+    public static function handle_ical_download()
+    {
+        // Check if this is an iCal download request.
+        if (! isset($_GET['gf_booking']) || $_GET['gf_booking'] !== 'ical') {
+            return;
+        }
+
+        // Get appointment ID.
+        $appointment_id = isset($_GET['appointment']) ? absint($_GET['appointment']) : 0;
+
+        if (! $appointment_id) {
+            wp_die(__('Invalid request.', 'gform-booking'));
+        }
+
+        // Load appointment.
+        $appointment = new Appointment($appointment_id);
+
+        if (! $appointment->exists()) {
+            wp_die(__('Appointment not found.', 'gform-booking'));
+        }
+
+        // Generate iCal content.
+        $ical_content = Confirmation::generate_ical_content($appointment);
+
+        // Set headers for opening in calendar app (not attachment).
+        header('Content-Type: text/calendar; charset=utf-8');
+        header('Content-Disposition: inline; filename="appointment-' . $appointment_id . '.ics"');
+        header('Content-Length: ' . strlen($ical_content));
+        header('Cache-Control: no-cache, must-revalidate');
+        header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+
+        // Output iCal content.
+        echo $ical_content;
+        exit;
     }
 
     /**

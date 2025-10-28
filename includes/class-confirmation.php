@@ -148,6 +148,9 @@ class Confirmation
             home_url()
         );
 
+        // Create iCal download link.
+        $ical_url = self::get_ical_download_url($appointment->get_id());
+
         ob_start();
 ?>
         <!DOCTYPE html>
@@ -239,6 +242,9 @@ class Confirmation
                         <a href="<?php echo esc_url($manage_url); ?>" class="button button-modify">
                             <?php esc_html_e('Modify or Cancel Appointment', 'gform-booking'); ?>
                         </a>
+                        <a href="<?php echo esc_url($ical_url); ?>" class="button" style="background-color: #666; color: white;">
+                            📅 <?php esc_html_e('Add to Calendar', 'gform-booking'); ?>
+                        </a>
                     </p>
 
                     <p><?php esc_html_e('If you have any questions, please contact us.', 'gform-booking'); ?></p>
@@ -261,5 +267,78 @@ class Confirmation
         </html>
 <?php
         return ob_get_clean();
+    }
+
+    /**
+     * Generate iCal download link for appointment
+     *
+     * @param int $appointment_id Appointment ID.
+     * @return string iCal download URL.
+     */
+    public static function get_ical_download_url($appointment_id)
+    {
+        return add_query_arg(
+            array(
+                'gf_booking' => 'ical',
+                'appointment' => $appointment_id,
+            ),
+            home_url()
+        );
+    }
+
+    /**
+     * Generate iCal file content
+     *
+     * @param Appointment $appointment Appointment object.
+     * @return string iCal content.
+     */
+    public static function generate_ical_content($appointment)
+    {
+        $date_start = $appointment->get('appointment_date') . ' ' . $appointment->get('start_time');
+        $date_end = $appointment->get('appointment_date') . ' ' . $appointment->get('end_time');
+
+        // Convert to UTC timestamps.
+        $timestamp_start = get_gmt_from_date($date_start, 'U');
+        $timestamp_end = get_gmt_from_date($date_end, 'U');
+
+        // Format for iCal.
+        $dtstart = gmdate('Ymd\THis\Z', $timestamp_start);
+        $dtend = gmdate('Ymd\THis\Z', $timestamp_end);
+
+        $summary = sprintf(
+            __('Appointment: %s', 'gform-booking'),
+            sanitize_text_field($appointment->get('customer_name'))
+        );
+
+        $description = sprintf(
+            __("Customer: %s\nEmail: %s\nPhone: %s\nService: %s", 'gform-booking'),
+            $appointment->get('customer_name'),
+            $appointment->get('customer_email'),
+            $appointment->get('customer_phone'),
+            $appointment->get('service_name')
+        );
+
+        $location = get_bloginfo('name');
+        $uid = 'appointment-' . $appointment->get('id') . '@' . parse_url(home_url(), PHP_URL_HOST);
+
+        $ical = "BEGIN:VCALENDAR\r\n";
+        $ical .= "VERSION:2.0\r\n";
+        $ical .= "PRODID:-//" . get_bloginfo('name') . "//GF Booking//EN\r\n";
+        $ical .= "CALSCALE:GREGORIAN\r\n";
+        $ical .= "METHOD:REQUEST\r\n";
+        $ical .= "BEGIN:VEVENT\r\n";
+        $ical .= "UID:" . $uid . "\r\n";
+        $ical .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";
+        $ical .= "DTSTART:" . $dtstart . "\r\n";
+        $ical .= "DTEND:" . $dtend . "\r\n";
+        $ical .= "SUMMARY:" . $summary . "\r\n";
+        $ical .= "DESCRIPTION:" . str_replace(array("\r", "\n"), array("\\r", "\\n"), $description) . "\r\n";
+        $ical .= "LOCATION:" . $location . "\r\n";
+        $ical .= "STATUS:CONFIRMED\r\n";
+        $ical .= "SEQUENCE:0\r\n";
+        $ical .= "END:VEVENT\r\n";
+        $ical .= "END:VCALENDAR\r\n";
+
+        return $ical;
     }
 }

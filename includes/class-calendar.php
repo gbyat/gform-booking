@@ -221,8 +221,23 @@ class Calendar
         $lunch_break_start = isset($settings['lunch_break_start']) ? strtotime($settings['lunch_break_start']) : null;
         $lunch_break_end = isset($settings['lunch_break_end']) ? strtotime($settings['lunch_break_end']) : null;
 
-        $start = strtotime($start_time);
-        $end = strtotime($end_time);
+        // Parse time strings to avoid strtotime() using current date.
+        $start_parts = explode(':', $start_time);
+        list($start_hour, $start_minute, $start_second) = array((int)$start_parts[0], (int)$start_parts[1], (int)$start_parts[2]);
+
+        $end_parts = explode(':', $end_time);
+        list($end_hour, $end_minute, $end_second) = array((int)$end_parts[0], (int)$end_parts[1], (int)$end_parts[2]);
+
+        // Create timestamps using mktime on a reference date (1970-01-01).
+        $start = mktime($start_hour, $start_minute, $start_second, 1, 1, 1970);
+        $end = mktime($end_hour, $end_minute, $end_second, 1, 1, 1970);
+
+        // Adjust lunch break timestamps if needed.
+        if ($has_lunch_break && $lunch_break_start && $lunch_break_end) {
+            $lunch_break_start = mktime(date('G', $lunch_break_start), date('i', $lunch_break_start), date('s', $lunch_break_start), 1, 1, 1970);
+            $lunch_break_end = mktime(date('G', $lunch_break_end), date('i', $lunch_break_end), date('s', $lunch_break_end), 1, 1, 1970);
+        }
+
         $duration_seconds = $slot_duration * 60;
 
         while ($start < $end) {
@@ -248,8 +263,13 @@ class Calendar
                 );
             }
 
-            // Add buffer time to the next slot.
-            $start = $slot_end + ($buffer_time * 60);
+            // Move to next slot without buffer time (if buffer_time is 0).
+            $start = $slot_end;
+
+            // Only add buffer time if it's set.
+            if ($buffer_time > 0) {
+                $start += ($buffer_time * 60);
+            }
         }
 
         return $slots;
