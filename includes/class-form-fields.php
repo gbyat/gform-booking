@@ -55,6 +55,17 @@ class Form_Fields
         $service = new Service($service_id);
         $settings = $service->get('settings');
         $calendar_type = isset($settings['calendar_type']) ? $settings['calendar_type'] : 'simple';
+        $allow_multiple_slots = isset($settings['allow_multiple_slots']) ? $settings['allow_multiple_slots'] : false;
+
+        // Calculate min/max date based on settings.
+        $min_date = date('Y-m-d', strtotime('+1 day')); // Default earliest: tomorrow
+        $min_booking_type = isset($settings['min_booking_type']) ? $settings['min_booking_type'] : 'days_ahead';
+        if ($min_booking_type === 'fixed_date') {
+            $min_date = isset($settings['min_booking_date']) ? $settings['min_booking_date'] : $min_date;
+        } elseif ($min_booking_type === 'days_ahead') {
+            $min_days = isset($settings['min_booking_days']) ? absint($settings['min_booking_days']) : 1;
+            $min_date = date('Y-m-d', strtotime("+{$min_days} days"));
+        }
 
         // Calculate max date based on settings.
         $max_date = date('Y-m-d', strtotime('+60 days')); // Default.
@@ -64,6 +75,18 @@ class Form_Fields
         } elseif ($max_booking_type === 'days_ahead') {
             $max_days = isset($settings['max_booking_days']) ? absint($settings['max_booking_days']) : 60;
             $max_date = date('Y-m-d', strtotime("+{$max_days} days"));
+        }
+
+        // Determine which month to display initially: use min_date if in current month or future.
+        $min_date_obj = new \DateTime($min_date);
+        $today = new \DateTime();
+        $calendar_year = (int) $today->format('Y');
+        $calendar_month = (int) $today->format('m');
+
+        // If min_date is in the future, start the calendar on that month.
+        if ($min_date_obj > $today) {
+            $calendar_year = (int) $min_date_obj->format('Y');
+            $calendar_month = (int) $min_date_obj->format('m');
         }
 
         ob_start();
@@ -86,16 +109,14 @@ class Form_Fields
 
         if ($calendar_type === 'month') {
             // Show month calendar view.
-            $year = date('Y');
-            $month = date('m');
-            $month_data = $calendar->get_month_calendar($year, $month);
+            $month_data = $calendar->get_month_calendar($calendar_year, $calendar_month);
         ?>
-            <div class="gf-booking-calendar gf-booking-month-calendar" data-service-id="<?php echo esc_attr($service_id); ?>" data-max-date="<?php echo esc_attr($max_date); ?>">
+            <div class="gf-booking-calendar gf-booking-month-calendar" data-service-id="<?php echo esc_attr($service_id); ?>" data-min-date="<?php echo esc_attr($min_date); ?>" data-max-date="<?php echo esc_attr($max_date); ?>" data-allow-multiple-slots="<?php echo $allow_multiple_slots ? '1' : '0'; ?>">
 
                 <div class="gf-booking-month-nav">
                     <button type="button" class="gf-booking-prev-month">&larr; <?php esc_html_e('Previous', 'gform-booking'); ?></button>
                     <h4 class="gf-booking-current-month">
-                        <?php echo esc_html(date_i18n('F Y', mktime(0, 0, 0, $month, 1, $year))); ?>
+                        <?php echo esc_html(date_i18n('F Y', mktime(0, 0, 0, $calendar_month, 1, $calendar_year))); ?>
                     </h4>
                     <button type="button" class="gf-booking-next-month"><?php esc_html_e('Next', 'gform-booking'); ?> &rarr;</button>
                 </div>
@@ -151,9 +172,9 @@ class Form_Fields
         } else {
             // Simple date picker.
         ?>
-            <div class="gf-booking-calendar" data-service-id="<?php echo esc_attr($service_id); ?>" data-max-date="<?php echo esc_attr($max_date); ?>">
+            <div class="gf-booking-calendar" data-service-id="<?php echo esc_attr($service_id); ?>" data-min-date="<?php echo esc_attr($min_date); ?>" data-max-date="<?php echo esc_attr($max_date); ?>" data-allow-multiple-slots="<?php echo $allow_multiple_slots ? '1' : '0'; ?>">
                 <div class="gf-booking-date-picker">
-                    <input type="date" class="gf-booking-date" name="appointment_date" min="<?php echo esc_attr(date('Y-m-d', strtotime('+1 day'))); ?>" max="<?php echo esc_attr($max_date); ?>" required>
+                    <input type="date" class="gf-booking-date" name="appointment_date" min="<?php echo esc_attr($min_date); ?>" max="<?php echo esc_attr($max_date); ?>" required>
                 </div>
                 <div class="gf-booking-time-slots" style="display:none;">
                     <label><?php esc_html_e('Available times:', 'gform-booking'); ?></label>

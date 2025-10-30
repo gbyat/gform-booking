@@ -66,8 +66,8 @@ class Calendar
             return array();
         }
 
-        // Get all time slots for the day.
-        $all_slots = $this->generate_time_slots();
+        // Get all time slots for the day (pass date to use daily windows).
+        $all_slots = $this->generate_time_slots($date);
 
         // If no slots generated, return empty array.
         if (empty($all_slots)) {
@@ -109,8 +109,24 @@ class Calendar
             return false;
         }
 
-        // Check max booking date settings.
+        // Check min/max booking date settings.
         $settings = $this->service->get('settings');
+        // Min booking: enforce start window
+        $min_booking_type = isset($settings['min_booking_type']) ? $settings['min_booking_type'] : 'days_ahead';
+        if ($min_booking_type === 'fixed_date') {
+            $min_date = isset($settings['min_booking_date']) ? strtotime($settings['min_booking_date']) : null;
+            if ($min_date && $date_time < $min_date) {
+                return false;
+            }
+        } elseif ($min_booking_type === 'days_ahead') {
+            $min_days = isset($settings['min_booking_days']) ? absint($settings['min_booking_days']) : 1; // default: tomorrow
+            $min_date = strtotime("+{$min_days} days", $today);
+            if ($date_time < $min_date) {
+                return false;
+            }
+        }
+
+        // Max booking: enforce end window
         $max_booking_type = isset($settings['max_booking_type']) ? $settings['max_booking_type'] : 'days_ahead';
 
         if ($max_booking_type === 'fixed_date') {
@@ -162,6 +178,30 @@ class Calendar
      */
     private function is_allowed_weekday($date)
     {
+        $settings = $this->service->get('settings');
+        // If using custom slots, do not gate by Daily Time Windows.
+        // Custom slot availability is controlled per-slot (weekdays) later.
+        $slot_type = isset($settings['slot_type']) ? $settings['slot_type'] : 'time';
+        if ($slot_type === 'custom') {
+            return true;
+        }
+        $day_of_week = date('N', strtotime($date)); // 1-7 (Monday-Sunday).
+
+        // First check if we have daily time windows configured.
+        $daily_windows = isset($settings['daily_time_windows']) ? $settings['daily_time_windows'] : null;
+        if (is_array($daily_windows) && isset($daily_windows[$day_of_week])) {
+            $day_config = $daily_windows[$day_of_week];
+            // If day is marked as closed, return false.
+            if (isset($day_config['closed']) && $day_config['closed']) {
+                return false;
+            }
+            // If day has windows configured, it's allowed.
+            if (!empty($day_config['windows'])) {
+                return true;
+            }
+        }
+
+        // Fallback to old weekdays check for backwards compatibility.
         $weekdays = $this->service->get('weekdays');
 
         if (empty($weekdays)) {
@@ -180,8 +220,6 @@ class Calendar
             }
         }
 
-        $day_of_week = date('N', strtotime($date)); // 1-7 (Monday-Sunday).
-
         // Convert to int for comparison.
         $day_of_week_int = (int) $day_of_week;
         $weekdays_int = array_map('intval', $weekdays);
@@ -192,12 +230,11 @@ class Calendar
     /**
      * Generate all time slots for the service
      *
+     * @param string $date Optional date to get daily-specific windows.
      * @return array Array of time slots.
      */
-    private function generate_time_slots()
+    private function generate_time_slots($date = null)
     {
-        $start_time = $this->service->get('start_time');
-        $end_time = $this->service->get('end_time');
         $slot_duration = $this->service->get('slot_duration');
         $buffer_time = $this->service->get('buffer_time');
 
@@ -205,16 +242,56 @@ class Calendar
         $settings = $this->service->get('settings');
         $slot_type = isset($settings['slot_type']) ? $settings['slot_type'] : 'time';
 
-        // Handle full day or half day slots.
-        if ($slot_type === 'full_day' || $slot_type === 'half_day') {
-            $day_slots = $this->generate_day_slots($slot_type, $settings);
-            if (! empty($day_slots)) {
-                return $day_slots;
-            }
+        // Handle custom slots. When 'custom' is selected, do NOT fall back
+        // to generated fixed-duration slots. If none are available, return empty.
+        if ($slot_type === 'custom') {
+            return $this->generate_custom_slots($date);
         }
 
         // Default: Generate normal time slots.
         $slots = array();
+
+        // Check if we have daily time windows configured.
+        $daily_windows = isset($settings['daily_time_windows']) ? $settings['daily_time_windows'] : null;
+
+        // If date is provided and we have daily windows, use them.
+        if ($date && is_array($daily_windows)) {
+            $day_of_week = date('N', strtotime($date)); // 1-7
+            $day_config = isset($daily_windows[$day_of_week]) ? $daily_windows[$day_of_week] : null;
+
+            if ($day_config && (!isset($day_config['closed']) || !$day_config['closed'])) {
+                $windows = isset($day_config['windows']) ? $day_config['windows'] : array();
+
+                // Generate slots for each time window.
+                foreach ($windows as $window) {
+                    if (isset($window['start']) && isset($window['end'])) {
+                        $window_slots = $this->generate_slots_for_window(
+                            $window['start'],
+                            $window['end'],
+                            $slot_duration,
+                            $buffer_time
+                        );
+                        $slots = array_merge($slots, $window_slots);
+                    }
+                }
+            }
+
+            // Attach price if configured (fixed duration pricing).
+            $price = isset($settings['slot_price']) ? $settings['slot_price'] : '';
+            if ($price !== '') {
+                $price = str_replace(',', '.', $price);
+                foreach ($slots as &$slot_item) {
+                    $slot_item['price'] = $price;
+                }
+                unset($slot_item);
+            }
+
+            return $slots;
+        }
+
+        // Fallback to global start/end times (for backwards compatibility).
+        $start_time = $this->service->get('start_time');
+        $end_time = $this->service->get('end_time');
 
         // Check for lunch break.
         $has_lunch_break = isset($settings['has_lunch_break']) && $settings['has_lunch_break'];
@@ -272,63 +349,151 @@ class Calendar
             }
         }
 
+        // Attach price if configured (fixed duration pricing).
+        $price = isset($settings['slot_price']) ? $settings['slot_price'] : '';
+        if ($price !== '') {
+            $price = str_replace(',', '.', $price);
+            foreach ($slots as &$slot_item) {
+                $slot_item['price'] = $price;
+            }
+            unset($slot_item);
+        }
+
         return $slots;
     }
 
     /**
-     * Generate day slots (full day or half day)
+     * Generate slots for a specific time window
      *
-     * @param string $slot_type Slot type (full_day or half_day).
-     * @param array  $settings Service settings.
-     * @return array
+     * @param string $start_time Start time.
+     * @param string $end_time End time.
+     * @param int    $slot_duration Slot duration in minutes.
+     * @param int    $buffer_time Buffer time in minutes.
+     * @return array Array of time slots.
      */
-    private function generate_day_slots($slot_type, $settings)
+    private function generate_slots_for_window($start_time, $end_time, $slot_duration, $buffer_time)
     {
-        $start_time = $this->service->get('start_time');
-        $end_time = $this->service->get('end_time');
+        $slots = array();
 
-        if ($slot_type === 'full_day') {
-            return array(
-                array(
-                    'start' => '00:00:00',
-                    'end'   => '23:59:59',
-                    'label' => __('Full Day', 'gform-booking'),
-                    'type'  => 'full_day',
-                ),
-            );
-        } elseif ($slot_type === 'half_day') {
-            $half_days = array();
+        // Parse time strings.
+        $start_parts = explode(':', $start_time);
+        list($start_hour, $start_minute, $start_second) = array((int)$start_parts[0], (int)$start_parts[1], (int)$start_parts[2]);
 
-            // Morning slot.
-            if (isset($settings['half_day_morning']) && $settings['half_day_morning']) {
-                $morning_start = isset($settings['half_day_morning_start']) ? $settings['half_day_morning_start'] : '08:00:00';
-                $morning_end = isset($settings['half_day_morning_end']) ? $settings['half_day_morning_end'] : '12:00:00';
+        $end_parts = explode(':', $end_time);
+        list($end_hour, $end_minute, $end_second) = array((int)$end_parts[0], (int)$end_parts[1], (int)$end_parts[2]);
 
-                $half_days[] = array(
-                    'start' => $morning_start,
-                    'end'   => $morning_end,
-                    'label' => __('Morning', 'gform-booking'),
-                    'type'  => 'half_day',
+        // Create timestamps using mktime on a reference date (1970-01-01).
+        $start = mktime($start_hour, $start_minute, $start_second, 1, 1, 1970);
+        $end = mktime($end_hour, $end_minute, $end_second, 1, 1, 1970);
+
+        $duration_seconds = $slot_duration * 60;
+
+        while ($start < $end) {
+            $slot_end = $start + $duration_seconds;
+
+            if ($slot_end <= $end) {
+                $slots[] = array(
+                    'start' => date('H:i:s', $start),
+                    'end'   => date('H:i:s', $slot_end),
                 );
             }
 
-            // Afternoon slot.
-            if (isset($settings['half_day_afternoon']) && $settings['half_day_afternoon']) {
-                $afternoon_start = isset($settings['half_day_afternoon_start']) ? $settings['half_day_afternoon_start'] : '13:00:00';
-                $afternoon_end = isset($settings['half_day_afternoon_end']) ? $settings['half_day_afternoon_end'] : '17:00:00';
+            // Move to next slot.
+            $start = $slot_end;
 
-                $half_days[] = array(
-                    'start' => $afternoon_start,
-                    'end'   => $afternoon_end,
-                    'label' => __('Afternoon', 'gform-booking'),
-                    'type'  => 'half_day',
-                );
+            // Only add buffer time if it's set.
+            if ($buffer_time > 0) {
+                $start += ($buffer_time * 60);
             }
-
-            return $half_days;
         }
 
-        return array();
+        return $slots;
+    }
+
+    /**
+     * Generate custom slots based on configuration
+     *
+     * @param string $date Date in Y-m-d format.
+     * @return array Array of custom slots.
+     */
+    private function generate_custom_slots($date)
+    {
+        $settings = $this->service->get('settings');
+        $custom_slots_config = isset($settings['custom_slots']) ? $settings['custom_slots'] : array();
+
+        if (empty($custom_slots_config)) {
+            return array();
+        }
+
+        $day_of_week = date('N', strtotime($date)); // 1-7
+        $available_slots = array();
+
+        // Get all booked appointments for this date first.
+        $all_bookings = $this->get_booked_slots($date);
+
+        foreach ($custom_slots_config as $slot_config) {
+            // Check if this slot is available on this day.
+            if (!empty($slot_config['weekdays']) && !in_array($day_of_week, $slot_config['weekdays'])) {
+                continue;
+            }
+
+            $slot_start = isset($slot_config['start']) ? $slot_config['start'] : null;
+            $slot_end = isset($slot_config['end']) ? $slot_config['end'] : null;
+
+            // Check if any booked slot overlaps with this slot.
+            // If yes, hide this slot completely (as it would conflict with existing booking).
+            $has_conflict = false;
+            if (is_array($all_bookings)) {
+                foreach ($all_bookings as $booking) {
+                    $booking_start = $booking['start_time'];
+                    $booking_end = $booking['end_time'];
+
+                    // Check for time overlap: two time ranges overlap if start of one is before end of the other
+                    // and end of one is after start of the other.
+                    if ($booking_start < $slot_end && $booking_end > $slot_start) {
+                        $has_conflict = true;
+                        break;
+                    }
+                }
+            }
+
+            // If there's a conflict with existing booking, don't show this slot.
+            if ($has_conflict) {
+                continue;
+            }
+
+            // No conflict with existing bookings, so check capacity.
+            // For custom slots, we count how many times this slot has been booked.
+            $capacity = isset($slot_config['capacity']) ? absint($slot_config['capacity']) : 1;
+            $remaining = $capacity; // Start with full capacity.
+
+            // Count exact bookings for this specific slot (start and end times match).
+            // This allows multiple bookings of the same slot if capacity allows.
+            if (is_array($all_bookings)) {
+                $slot_bookings = 0;
+                foreach ($all_bookings as $booking) {
+                    // Check for exact match of start and end times (this specific slot).
+                    if ($booking['start_time'] === $slot_start && $booking['end_time'] === $slot_end) {
+                        $slot_bookings += isset($booking['participants']) ? absint($booking['participants']) : 1;
+                    }
+                }
+                $remaining = max(0, $capacity - $slot_bookings);
+            }
+
+            // Only return slot if there's capacity available.
+            if ($remaining > 0) {
+                $slot = array(
+                    'start' => $slot_config['start'],
+                    'end' => $slot_config['end'],
+                    'remaining' => $remaining,
+                    'capacity' => $capacity,
+                    'price' => isset($slot_config['price']) ? $slot_config['price'] : '',
+                );
+                $available_slots[] = $slot;
+            }
+        }
+
+        return $available_slots;
     }
 
     /**
@@ -401,26 +566,7 @@ class Calendar
         $settings = $service->get('settings');
         $max_participants = isset($settings['max_participants']) ? absint($settings['max_participants']) : 1;
 
-        // For full day or half day slots, check if any part overlaps.
-        $slot_type = isset($slot['type']) ? $slot['type'] : 'time';
-
-        if ($slot_type === 'full_day' || $slot_type === 'half_day') {
-            // For full/half day slots, sum participants from all bookings on the day.
-            $booked_slots = $this->get_booked_slots($date);
-            $total_booked = 0;
-            if (is_array($booked_slots)) {
-                foreach ($booked_slots as $slot) {
-                    $total_booked += isset($slot['participants']) ? absint($slot['participants']) : 1;
-                }
-            }
-            $remaining = $max_participants - $total_booked;
-
-            error_log('GF Booking: Full/Half day slot - participants booked: ' . $total_booked . ', max: ' . $max_participants . ', remaining: ' . $remaining);
-
-            return $remaining > 0 ? $remaining : null;
-        }
-
-        // For time-based slots, count overlapping bookings.
+        // For all slots (fixed duration or custom), count overlapping bookings.
         $booked_count = $this->get_booked_slots($date, $slot['start'], $slot['end']);
         $remaining = $max_participants - $booked_count;
 

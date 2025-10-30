@@ -191,13 +191,15 @@ class GF_Addon extends \GFAddOn
         <script type="text/javascript">
             jQuery(document).ready(function($) {
                 // Add service selection to calendar field settings.
-                fieldSettings['calendar'] = '.label_setting, .admin_label_setting, .visibility_setting, .gf_booking_service_setting, .gf_booking_participants_setting, .css_class_setting, .conditional_logic_field_setting, .conditional_logic_page_setting, .conditional_logic_nextbutton_setting, .error_message_setting, .label_placement_setting, .description_setting';
+                fieldSettings['calendar'] = '.label_setting, .admin_label_setting, .visibility_setting, .gf_booking_service_setting, .gf_booking_participants_setting, .gf_booking_name_setting, .gf_booking_phone_setting, .css_class_setting, .conditional_logic_field_setting, .conditional_logic_page_setting, .conditional_logic_nextbutton_setting, .error_message_setting, .label_placement_setting, .description_setting';
 
                 // Show/hide service setting based on field type.
                 jQuery(document).on('gform_load_field_settings', function(event, field, form) {
                     if (field.type === 'calendar') {
                         jQuery('.gf_booking_service_setting').show();
                         jQuery('.gf_booking_participants_setting').show();
+                        jQuery('.gf_booking_name_setting').show();
+                        jQuery('.gf_booking_phone_setting').show();
 
                         // Handle multi-select for services.
                         var selectedServices = field.gfBookingServices || field.gfBookingService || [];
@@ -224,9 +226,33 @@ class GF_Addon extends \GFAddOn
                         }
 
                         jQuery('#gf_booking_participants_select').val(field.gfBookingParticipantsField || '');
+
+                        // Populate name field dropdown (text/name)
+                        var nameSelect = jQuery('#gf_booking_name_select');
+                        if (nameSelect.find('option').length <= 1 && form && form.fields) {
+                            jQuery.each(form.fields, function(i, formField) {
+                                if (formField.type === 'text' || formField.type === 'name') {
+                                    nameSelect.append('<option value="' + formField.id + '">' + formField.label + ' (ID: ' + formField.id + ')</option>');
+                                }
+                            });
+                        }
+                        nameSelect.val(field.gfBookingNameField || '');
+
+                        // Populate phone field dropdown (phone/text)
+                        var phoneSelect = jQuery('#gf_booking_phone_select');
+                        if (phoneSelect.find('option').length <= 1 && form && form.fields) {
+                            jQuery.each(form.fields, function(i, formField) {
+                                if (formField.type === 'phone' || formField.type === 'text') {
+                                    phoneSelect.append('<option value="' + formField.id + '">' + formField.label + ' (ID: ' + formField.id + ')</option>');
+                                }
+                            });
+                        }
+                        phoneSelect.val(field.gfBookingPhoneField || '');
                     } else {
                         jQuery('.gf_booking_service_setting').hide();
                         jQuery('.gf_booking_participants_setting').hide();
+                        jQuery('.gf_booking_name_setting').hide();
+                        jQuery('.gf_booking_phone_setting').hide();
                     }
                 });
 
@@ -246,6 +272,14 @@ class GF_Addon extends \GFAddOn
                     // Handle participants field selection.
                     $(document).on('change', '.gf_booking_participants_select', function() {
                         SetFieldProperty('gfBookingParticipantsField', this.value);
+                    });
+
+                    // Handle name/phone selection
+                    $(document).on('change', '.gf_booking_name_select', function() {
+                        SetFieldProperty('gfBookingNameField', this.value);
+                    });
+                    $(document).on('change', '.gf_booking_phone_select', function() {
+                        SetFieldProperty('gfBookingPhoneField', this.value);
                     });
                 }
 
@@ -279,33 +313,135 @@ class GF_Addon extends \GFAddOn
                 $selected_service_id = absint($field->gfBookingService);
 
                 // Parse the calendar field value.
-                // Format: "YYYY-MM-DD|HH:MM" (e.g., "2024-12-15|14:00")
+                // Format: Single slot: "YYYY-MM-DDTHH:MM:SS" (e.g., "2024-12-15T14:00:00")
+                //         Multiple slots: "YYYY-MM-DDTHH:MM:SS,YYYY-MM-DDTHH:MM:SS,..."
                 $field_value = rgar($entry, $field_id);
                 error_log('GF Booking: Field value from entry: ' . $field_value);
-                if (!empty($field_value)) {
-                    $parts = explode('|', $field_value);
-                    error_log('GF Booking: Parsed parts: ' . json_encode($parts));
-                    if (count($parts) >= 2) {
-                        $appointment_date = sanitize_text_field($parts[0]);
-                        $start_time_str = sanitize_text_field($parts[1]);
-                        // Add seconds if not already present.
-                        if (strlen($start_time_str) === 5) {
-                            $start_time = $start_time_str . ':00';
-                        } else {
-                            $start_time = $start_time_str;
-                        }
-                        error_log('GF Booking: Date: ' . $appointment_date . ', Start time: ' . $start_time);
 
-                        // Calculate end time (add 30 minutes by default, or get from service).
-                        $service = new Service($selected_service_id);
-                        if ($service->exists()) {
-                            $slot_duration = $service->get('slot_duration') ?: 30;
-                            $start_timestamp = strtotime($start_time);
-                            $end_timestamp = $start_timestamp + ($slot_duration * 60);
-                            $end_time = date('H:i:s', $end_timestamp);
-                        } else {
-                            $end_time = date('H:i:s', strtotime($start_time) + (30 * 60));
+                if (!empty($field_value)) {
+                    // Check if multiple slots are selected (comma-separated).
+                    $slot_strings = explode(',', $field_value);
+                    $slots = array();
+
+                    foreach ($slot_strings as $slot_string) {
+                        $parts = explode('T', trim($slot_string));
+                        if (count($parts) >= 2) {
+                            $slot_date = sanitize_text_field($parts[0]);
+                            $start_time_str = sanitize_text_field($parts[1]);
+                            // Add seconds if not already present.
+                            if (strlen($start_time_str) === 5) {
+                                $start_time_str = $start_time_str . ':00';
+                            }
+
+                            $slots[] = array(
+                                'date' => $slot_date,
+                                'start' => $start_time_str,
+                            );
                         }
+                    }
+
+                    if (!empty($slots)) {
+                        // Group slots by date to check if they need to be merged.
+                        $service = new Service($selected_service_id);
+                        $settings = $service->exists() ? $service->get('settings') : array();
+                        $allow_multiple_slots = isset($settings['allow_multiple_slots']) ? $settings['allow_multiple_slots'] : false;
+                        $slot_type = isset($settings['slot_type']) ? $settings['slot_type'] : 'time';
+
+                        $total_price = 0.0;
+
+                        if ($allow_multiple_slots && count($slots) > 1) {
+                            // Check if all slots are on the same date.
+                            $first_date = $slots[0]['date'];
+                            $all_same_date = true;
+                            foreach ($slots as $slot) {
+                                if ($slot['date'] !== $first_date) {
+                                    $all_same_date = false;
+                                    break;
+                                }
+                            }
+
+                            if ($all_same_date) {
+                                // Merge slots on the same day into one appointment.
+                                $appointment_date = $first_date;
+
+                                // Find earliest start time and latest end time.
+                                $earliest_start = $slots[0]['start'];
+                                $latest_end = '';
+
+                                foreach ($slots as $slot) {
+                                    $slot_start = $slot['start'];
+                                    $slot_end = $this->calculate_slot_end_time($service, $slot_start);
+                                    // Sum price per slot
+                                    if ($slot_type === 'custom') {
+                                        // Match custom slot by start time
+                                        if (!empty($settings['custom_slots']) && is_array($settings['custom_slots'])) {
+                                            foreach ($settings['custom_slots'] as $cs) {
+                                                if (isset($cs['start']) && $cs['start'] === substr($slot_start, 0, 5) && isset($cs['price']) && $cs['price'] !== '') {
+                                                    $total_price += (float) str_replace(',', '.', $cs['price']);
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        if (!empty($settings['slot_price'])) {
+                                            $total_price += (float) str_replace(',', '.', $settings['slot_price']);
+                                        }
+                                    }
+
+                                    if ($slot_start < $earliest_start) {
+                                        $earliest_start = $slot_start;
+                                    }
+                                    if (empty($latest_end) || $slot_end > $latest_end) {
+                                        $latest_end = $slot_end;
+                                    }
+                                }
+
+                                $start_time = $earliest_start;
+                                $end_time = $latest_end;
+                            } else {
+                                // Multiple slots on different dates - use first slot only for now.
+                                // TODO: Could create multiple appointments, but for now we'll just use the first.
+                                $appointment_date = $slots[0]['date'];
+                                $start_time = $slots[0]['start'];
+                                $end_time = $this->calculate_slot_end_time($service, $start_time);
+                                // Price only for the first slot
+                                if ($slot_type === 'custom') {
+                                    if (!empty($settings['custom_slots']) && is_array($settings['custom_slots'])) {
+                                        foreach ($settings['custom_slots'] as $cs) {
+                                            if (isset($cs['start']) && $cs['start'] === substr($start_time, 0, 5) && isset($cs['price']) && $cs['price'] !== '') {
+                                                $total_price += (float) str_replace(',', '.', $cs['price']);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    if (!empty($settings['slot_price'])) {
+                                        $total_price += (float) str_replace(',', '.', $settings['slot_price']);
+                                    }
+                                }
+                            }
+                        } else {
+                            // Single slot selected.
+                            $appointment_date = $slots[0]['date'];
+                            $start_time = $slots[0]['start'];
+                            $end_time = $this->calculate_slot_end_time($service, $start_time);
+                            if ($slot_type === 'custom') {
+                                if (!empty($settings['custom_slots']) && is_array($settings['custom_slots'])) {
+                                    foreach ($settings['custom_slots'] as $cs) {
+                                        if (isset($cs['start']) && $cs['start'] === substr($start_time, 0, 5) && isset($cs['price']) && $cs['price'] !== '') {
+                                            $total_price += (float) str_replace(',', '.', $cs['price']);
+                                            break;
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (!empty($settings['slot_price'])) {
+                                    $total_price += (float) str_replace(',', '.', $settings['slot_price']);
+                                }
+                            }
+                        }
+
+                        error_log('GF Booking: Date: ' . $appointment_date . ', Start time: ' . $start_time . ', End time: ' . $end_time);
                     }
                 }
                 break;
@@ -323,13 +459,27 @@ class GF_Addon extends \GFAddOn
         $email = '';
         $phone = '';
 
+        // Prefer explicit mapping from calendar field settings (if provided)
+        if (!empty($calendar_field->gfBookingNameField)) {
+            $mapped_name = rgar($entry, absint($calendar_field->gfBookingNameField));
+            if (!empty($mapped_name)) {
+                $name = sanitize_text_field($mapped_name);
+            }
+        }
+        if (!empty($calendar_field->gfBookingPhoneField)) {
+            $mapped_phone = rgar($entry, absint($calendar_field->gfBookingPhoneField));
+            if (!empty($mapped_phone)) {
+                $phone = sanitize_text_field($mapped_phone);
+            }
+        }
+
         foreach ($form['fields'] as $field) {
             $field_value = rgar($entry, $field->id);
             if (empty($field_value)) {
                 continue;
             }
 
-            if ($field->type === 'name' || $field->inputType === 'name') {
+            if (empty($name) && ($field->type === 'name' || $field->inputType === 'name')) {
                 // Gravity Forms name field can be an array or string.
                 if (is_array($field_value)) {
                     // Combine first and last name.
@@ -343,7 +493,7 @@ class GF_Addon extends \GFAddOn
                 }
             } elseif ($field->type === 'email' || $field->inputType === 'email') {
                 $email = $field_value;
-            } elseif ($field->type === 'phone') {
+            } elseif (empty($phone) && $field->type === 'phone') {
                 $phone = $field_value;
             }
         }
@@ -381,6 +531,10 @@ class GF_Addon extends \GFAddOn
                 'start_time'       => $start_time,
                 'end_time'         => $end_time,
                 'participants'     => $participants,
+                'settings'         => array(
+                    'total_price' => isset($total_price) ? $total_price : 0,
+                    'currency'    => Admin::get_currency(),
+                ),
             )
         );
 
@@ -388,6 +542,56 @@ class GF_Addon extends \GFAddOn
             error_log('GF Booking: Appointment created successfully. ID: ' . $appointment_id);
         } else {
             error_log('GF Booking: Failed to create appointment.');
+        }
+    }
+
+    /**
+     * Calculate end time for a slot based on service settings
+     *
+     * @param Service $service Service object.
+     * @param string  $start_time Start time in H:i:s format.
+     * @return string End time in H:i:s format.
+     */
+    private function calculate_slot_end_time($service, $start_time)
+    {
+        if (!$service || !$service->exists()) {
+            // Fallback: 30 minutes.
+            return date('H:i:s', strtotime($start_time) + (30 * 60));
+        }
+
+        $settings = $service->get('settings');
+        $slot_type = isset($settings['slot_type']) ? $settings['slot_type'] : 'time';
+
+        if ($slot_type === 'custom') {
+            // For custom slots, find the matching slot config to get the end time.
+            $custom_slots = isset($settings['custom_slots']) ? $settings['custom_slots'] : array();
+            $end_time = '';
+            foreach ($custom_slots as $slot_config) {
+                // Compare time without seconds.
+                $config_start = isset($slot_config['start']) ? $slot_config['start'] : '';
+                if (substr($config_start, 0, 5) === substr($start_time, 0, 5)) {
+                    $end_time = isset($slot_config['end']) ? $slot_config['end'] : '';
+                    // Add seconds if not present.
+                    if (!empty($end_time) && strlen($end_time) === 5) {
+                        $end_time = $end_time . ':00';
+                    }
+                    break;
+                }
+            }
+            // Fallback if slot not found.
+            if (empty($end_time)) {
+                $slot_duration = $service->get('slot_duration') ?: 30;
+                $start_timestamp = strtotime($start_time);
+                $end_timestamp = $start_timestamp + ($slot_duration * 60);
+                $end_time = date('H:i:s', $end_timestamp);
+            }
+            return $end_time;
+        } else {
+            // Fixed duration slots.
+            $slot_duration = $service->get('slot_duration') ?: 30;
+            $start_timestamp = strtotime($start_time);
+            $end_timestamp = $start_timestamp + ($slot_duration * 60);
+            return date('H:i:s', $end_timestamp);
         }
     }
 
@@ -444,8 +648,50 @@ class GF_Addon extends \GFAddOn
                 </select>
                 <p class="description"><?php esc_html_e('Select a number field to use for the number of participants. If not set, defaults to 1.', 'gform-booking'); ?></p>
             </li>
+            <li class="gf_booking_name_setting field_setting" style="display:none;">
+                <label for="gf_booking_name_select" class="section_label">
+                    <?php esc_html_e('Customer Name Field', 'gform-booking'); ?>
+                </label>
+                <select id="gf_booking_name_select" class="gf_booking_name_select" onchange="SetFieldProperty('gfBookingNameField', this.value);">
+                    <option value=""><?php esc_html_e('None', 'gform-booking'); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e('Optional: Select a field to use as the customer name.', 'gform-booking'); ?></p>
+            </li>
+            <li class="gf_booking_phone_setting field_setting" style="display:none;">
+                <label for="gf_booking_phone_select" class="section_label">
+                    <?php esc_html_e('Phone Field', 'gform-booking'); ?>
+                </label>
+                <select id="gf_booking_phone_select" class="gf_booking_phone_select" onchange="SetFieldProperty('gfBookingPhoneField', this.value);">
+                    <option value=""><?php esc_html_e('None', 'gform-booking'); ?></option>
+                </select>
+                <p class="description"><?php esc_html_e('Optional: Select a field to use as the phone number.', 'gform-booking'); ?></p>
+            </li>
 <?php
         }
+    }
+
+    /**
+     * Define plugin settings fields
+     *
+     * @return array Settings fields.
+     */
+    public function plugin_settings_fields()
+    {
+        return array(
+            array(
+                'title'  => __('General Settings', 'gform-booking'),
+                'fields' => array(
+                    array(
+                        'name'    => 'currency',
+                        'label'   => __('Currency', 'gform-booking'),
+                        'type'    => 'text',
+                        'class'   => 'small',
+                        'default_value' => 'EUR',
+                        'tooltip' => __('The currency code used for pricing (e.g., EUR, USD, GBP).', 'gform-booking'),
+                    ),
+                ),
+            ),
+        );
     }
 
     public function __construct()

@@ -1,0 +1,37 @@
+# WordPress
+.htaccess
+wp-config.php
+wp-content/uploads/
+wp-content/blogs.dir/
+wp-content/upgrade/
+wp-content/backup-db/
+wp-content/cache/
+wp-content/cache/supercache/
+
+# Plugin specific
+node_modules/
+vendor/
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment
+.env
+.env.local
+
+# Development/Documentation files (not needed in releases)
+AGENT.md
+INSTALL.md
+TEST.md
+TROUBLESHOOTING.md
+RELEASE-FILES.md
+wp-config-sample.php
+
+# Composer (not used in this plugin)
+composer.lock

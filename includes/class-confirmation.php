@@ -52,8 +52,33 @@ class Confirmation
             'From: ' . $from_name . ' <' . $from_email . '>'
         );
 
+        // Attach iCal (.ics) file to improve Outlook handling
+        $attachments = array();
+        try {
+            $ical_content = self::generate_ical_content($appointment);
+            $tmp_file = wp_tempnam('appointment-' . $appointment->get_id() . '.ics');
+            if ($tmp_file) {
+                // Ensure .ics extension for better client recognition
+                $ics_path = $tmp_file . '.ics';
+                if (@file_put_contents($ics_path, $ical_content) !== false) {
+                    $attachments[] = $ics_path;
+                }
+            }
+        } catch (\Throwable $e) {
+            // Swallow attachment errors; email can still be sent without attachment
+        }
+
         error_log('GF Booking: Sending confirmation email to: ' . $to);
-        $sent = wp_mail($to, $subject, $message, $headers);
+        $sent = wp_mail($to, $subject, $message, $headers, $attachments);
+
+        // Cleanup temp attachment files
+        if (!empty($attachments)) {
+            foreach ($attachments as $path) {
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
+            }
+        }
         error_log('GF Booking: Email sent: ' . ($sent ? 'yes' : 'no'));
 
         // Also notify the assigned user/service admin.
@@ -117,8 +142,30 @@ class Confirmation
             'From: ' . $from_name . ' <' . $from_email . '>'
         );
 
+        // Attach iCal (.ics) for admins too, so they can add to calendar quickly
+        $attachments = array();
+        try {
+            $ical_content = self::generate_ical_content($appointment);
+            $tmp_file = wp_tempnam('appointment-' . $appointment->get_id() . '.ics');
+            if ($tmp_file) {
+                $ics_path = $tmp_file . '.ics';
+                if (@file_put_contents($ics_path, $ical_content) !== false) {
+                    $attachments[] = $ics_path;
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
         error_log('GF Booking: Sending admin notification to: ' . $to);
-        $sent = wp_mail($to, $subject, $message, $headers);
+        $sent = wp_mail($to, $subject, $message, $headers, $attachments);
+
+        if (!empty($attachments)) {
+            foreach ($attachments as $path) {
+                if (file_exists($path)) {
+                    @unlink($path);
+                }
+            }
+        }
         error_log('GF Booking: Admin notification sent: ' . ($sent ? 'yes' : 'no'));
     }
 
@@ -139,14 +186,30 @@ class Confirmation
         $end_time = date_i18n($time_format, strtotime($appointment->get('end_time')));
 
         // Create modify/cancel link.
-        $manage_url = add_query_arg(
-            array(
-                'gf_booking'  => 'manage',
-                'appointment' => $appointment->get_id(),
-                'token'       => $token,
-            ),
-            home_url()
-        );
+        // Check if a management page is configured
+        $gf_addon = \GFormBooking\GF_Addon::get_instance();
+        $settings = $gf_addon ? $gf_addon->get_plugin_settings() : array();
+        $management_page_id = isset($settings['management_page_id']) ? absint($settings['management_page_id']) : 0;
+
+        if ($management_page_id > 0) {
+            // Use configured management page
+            $manage_url = add_query_arg(
+                array(
+                    'token' => $token,
+                ),
+                get_permalink($management_page_id)
+            );
+        } else {
+            // Fallback to old URL format
+            $manage_url = add_query_arg(
+                array(
+                    'gf_booking'  => 'manage',
+                    'appointment' => $appointment->get_id(),
+                    'token'       => $token,
+                ),
+                home_url()
+            );
+        }
 
         // Create iCal download link.
         $ical_url = self::get_ical_download_url($appointment->get_id());
@@ -305,18 +368,29 @@ class Confirmation
         $dtstart = gmdate('Ymd\THis\Z', $timestamp_start);
         $dtend = gmdate('Ymd\THis\Z', $timestamp_end);
 
+        // Get service name.
+        $service = new \GFormBooking\Service($appointment->get('service_id'));
+        $service_name = $service->exists() ? $service->get('name') : __('Appointment', 'gform-booking');
+
         $summary = sprintf(
             __('Appointment: %s', 'gform-booking'),
             sanitize_text_field($appointment->get('customer_name'))
         );
 
-        $description = sprintf(
-            __("Customer: %s\nEmail: %s\nPhone: %s\nService: %s", 'gform-booking'),
-            $appointment->get('customer_name'),
-            $appointment->get('customer_email'),
-            $appointment->get('customer_phone'),
-            $appointment->get('service_name')
-        );
+        // Build description with all available information.
+        $description_parts = array();
+        $description_parts[] = sprintf(__('Customer: %s', 'gform-booking'), $appointment->get('customer_name'));
+        $description_parts[] = sprintf(__('Email: %s', 'gform-booking'), $appointment->get('customer_email'));
+
+        if ($appointment->get('customer_phone')) {
+            $description_parts[] = sprintf(__('Phone: %s', 'gform-booking'), $appointment->get('customer_phone'));
+        }
+
+        if ($service_name) {
+            $description_parts[] = sprintf(__('Service: %s', 'gform-booking'), $service_name);
+        }
+
+        $description = implode('\\n', $description_parts);
 
         $location = get_bloginfo('name');
         $uid = 'appointment-' . $appointment->get('id') . '@' . parse_url(home_url(), PHP_URL_HOST);
@@ -325,7 +399,8 @@ class Confirmation
         $ical .= "VERSION:2.0\r\n";
         $ical .= "PRODID:-//" . get_bloginfo('name') . "//GF Booking//EN\r\n";
         $ical .= "CALSCALE:GREGORIAN\r\n";
-        $ical .= "METHOD:REQUEST\r\n";
+        // Use PUBLISH for a normal appointment (not a meeting request)
+        $ical .= "METHOD:PUBLISH\r\n";
         $ical .= "BEGIN:VEVENT\r\n";
         $ical .= "UID:" . $uid . "\r\n";
         $ical .= "DTSTAMP:" . gmdate('Ymd\THis\Z') . "\r\n";

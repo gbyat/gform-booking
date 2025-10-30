@@ -75,7 +75,8 @@ class Service
     {
         global $wpdb;
         $table = $wpdb->prefix . 'gf_booking_services';
-        return $wpdb->get_results("SELECT * FROM $table ORDER BY name ASC", ARRAY_A);
+        // Safe: table name uses $wpdb->prefix, no user input
+        return $wpdb->get_results("SELECT * FROM {$table} ORDER BY name ASC", ARRAY_A);
     }
 
     /**
@@ -103,14 +104,14 @@ class Service
         $data = wp_parse_args($data, $defaults);
 
         $insert_data = array(
-                            'name'          => sanitize_text_field($data['name']),
-                'description'   => wp_kses_post($data['description']),
-                'weekdays'      => wp_json_encode($data['weekdays']),
-                'start_time'    => sanitize_text_field($data['start_time']),
-                'end_time'      => sanitize_text_field($data['end_time']),
-                'slot_duration' => absint($data['slot_duration']),
-                'buffer_time'   => absint($data['buffer_time']),
-                'settings'      => wp_json_encode($data['settings']),
+            'name'          => sanitize_text_field($data['name']),
+            'description'   => wp_kses_post($data['description']),
+            'weekdays'      => wp_json_encode($data['weekdays']),
+            'start_time'    => sanitize_text_field($data['start_time']),
+            'end_time'      => sanitize_text_field($data['end_time']),
+            'slot_duration' => absint($data['slot_duration']),
+            'buffer_time'   => absint($data['buffer_time']),
+            'settings'      => wp_json_encode($data['settings']),
             'created_at'    => current_time('mysql'),
             'updated_at'    => current_time('mysql'),
         );

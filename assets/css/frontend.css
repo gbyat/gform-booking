@@ -2,6 +2,40 @@
  * GF Booking - Frontend Styles
  */
 
+:root {
+	/* Primary colors */
+	--gf-booking-primary: #0073aa;
+	--gf-booking-primary-hover: #005177;
+	--gf-booking-primary-text: #ffffff;
+	
+	/* Secondary colors */
+	--gf-booking-secondary-bg: #f0f0f0;
+	--gf-booking-secondary-border: #ddd;
+	--gf-booking-secondary-hover: #e0e0e0;
+	
+	/* Status colors */
+	--gf-booking-success-bg: #d4edda;
+	--gf-booking-success-border: #c3e6cb;
+	--gf-booking-error-bg: #f8d7da;
+	--gf-booking-error-border: #f5c6cb;
+	--gf-booking-info-bg: #d1ecf1;
+	--gf-booking-info-border: #bee5eb;
+	--gf-booking-warning-bg: #fff3cd;
+	--gf-booking-warning-border: #ffc107;
+	
+	/* Calendar colors */
+	--gf-booking-calendar-header-bg: #f0f0f0;
+	--gf-booking-calendar-available-bg: #f0fdf4;
+	--gf-booking-calendar-unavailable-bg: #f5f5f5;
+	--gf-booking-calendar-unavailable-opacity: 0.6;
+	--gf-booking-calendar-day-hover: #e8f4f8;
+	
+	/* Text colors */
+	--gf-booking-text-primary: #333333;
+	--gf-booking-text-secondary: #666666;
+	--gf-booking-text-muted: #999999;
+}
+
 .gf-booking-calendar {
 	margin: 20px 0;
 }
@@ -9,7 +43,7 @@
 .gf-booking-date-picker input[type="date"] {
 	padding: 8px 12px;
 	font-size: 14px;
-	border: 1px solid #ddd;
+	border: 1px solid var(--gf-booking-secondary-border);
 	border-radius: 4px;
 	width: 100%;
 	max-width: 300px;
@@ -29,28 +63,42 @@
 .gf-booking-slot {
 	padding: 10px 15px;
 	text-align: center;
-	background-color: #f0f0f0;
-	border: 2px solid #ddd;
+	background-color: var(--gf-booking-secondary-bg);
+	border: 2px solid var(--gf-booking-secondary-border);
 	border-radius: 4px;
 	cursor: pointer;
 	transition: all 0.2s;
 }
 
 .gf-booking-slot:hover {
-	background-color: #e0e0e0;
-	border-color: #0073aa;
+	background-color: var(--gf-booking-secondary-hover);
+	border-color: var(--gf-booking-primary);
 }
 
 .gf-booking-slot.selected {
-	background-color: #0073aa;
-	color: white;
-	border-color: #0073aa;
+	background-color: var(--gf-booking-primary);
+	color: var(--gf-booking-primary-text);
+	border-color: var(--gf-booking-primary);
 }
 
 .gf-booking-slot.unavailable {
 	opacity: 0.5;
 	cursor: not-allowed;
-	background-color: #f5f5f5;
+	background-color: var(--gf-booking-calendar-unavailable-bg);
+}
+
+/* Multiple slot selection (checkboxes) - when slot is a label */
+label.gf-booking-slot {
+	cursor: pointer;
+	display: block;
+	margin: 0;
+}
+
+label.gf-booking-slot input[type="checkbox"] {
+	position: absolute;
+	opacity: 0;
+	width: 0;
+	height: 0;
 }
 
 /* Month Calendar Styles */
@@ -67,15 +115,15 @@
 
 .gf-booking-month-nav button {
 	padding: 8px 16px;
-	background-color: #0073aa;
-	color: white;
+	background-color: var(--gf-booking-primary);
+	color: var(--gf-booking-primary-text);
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;
 }
 
 .gf-booking-month-nav button:hover {
-	background-color: #005177;
+	background-color: var(--gf-booking-primary-hover);
 }
 
 .gf-booking-current-month {
@@ -93,11 +141,11 @@
 .gf-booking-calendar-table td {
 	padding: 8px;
 	text-align: center;
-	border: 1px solid #ddd;
+	border: 1px solid var(--gf-booking-secondary-border);
 }
 
 .gf-booking-calendar-table th {
-	background-color: #f0f0f0;
+	background-color: var(--gf-booking-calendar-header-bg);
 	font-weight: 600;
 }
 
@@ -109,23 +157,23 @@
 }
 
 .gf-booking-day:hover {
-	background-color: #e8f4f8;
+	background-color: var(--gf-booking-calendar-day-hover);
 }
 
 .gf-booking-day.available {
-	background-color: #f0fdf4;
+	background-color: var(--gf-booking-calendar-available-bg);
 }
 
 .gf-booking-day.unavailable {
-	background-color: #f5f5f5;
-	opacity: 0.6;
+	background-color: var(--gf-booking-calendar-unavailable-bg);
+	opacity: var(--gf-booking-calendar-unavailable-opacity);
 	cursor: not-allowed;
-	color: #999;
+	color: var(--gf-booking-text-muted);
 }
 
 .gf-booking-day.selected {
-	background-color: #0073aa;
-	color: white;
+	background-color: var(--gf-booking-primary);
+	color: var(--gf-booking-primary-text);
 }
 
 .gf-booking-day-number {
@@ -136,22 +184,22 @@
 
 .gf-booking-slots-count {
 	font-size: 12px;
-	color: #666;
+	color: var(--gf-booking-text-secondary);
 }
 
 .gf-booking-day.selected .gf-booking-slots-count {
-	color: white;
+	color: var(--gf-booking-primary-text);
 }
 
 .gf-booking-selected-info {
 	margin-top: 20px;
 	padding: 15px;
-	background-color: #f9f9f9;
-	border: 1px solid #ddd;
+	background-color: var(--gf-booking-secondary-bg);
+	border: 1px solid var(--gf-booking-secondary-border);
 	border-radius: 4px;
 }
 
 .gf-booking-selected-info .selected-date {
 	font-weight: 600;
-	color: #0073aa;
+	color: var(--gf-booking-primary);
 }

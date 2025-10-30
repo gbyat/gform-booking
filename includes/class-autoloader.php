@@ -33,6 +33,9 @@ class Autoloader
         // Load plugin files.
         self::load_files();
 
+        // Initialize GitHub updater early (before other components).
+        self::init_github_updater();
+
         // Initialize components.
         self::init_components();
 
@@ -52,6 +55,7 @@ class Autoloader
         require_once GFORM_BOOKING_PLUGIN_DIR . 'includes/class-admin.php';
         require_once GFORM_BOOKING_PLUGIN_DIR . 'includes/class-form-fields.php';
         require_once GFORM_BOOKING_PLUGIN_DIR . 'includes/class-confirmation.php';
+        require_once GFORM_BOOKING_PLUGIN_DIR . 'includes/class-updater.php';
     }
 
     /**
@@ -80,10 +84,21 @@ class Autoloader
         add_action('wp_ajax_nopriv_gf_booking_update_appointment', array(__CLASS__, 'ajax_update_appointment'));
 
         // Public appointment management page.
-        add_action('template_redirect', array(__CLASS__, 'handle_public_management'));
+        add_action('wp', array(__CLASS__, 'handle_public_management'));
 
         // iCal download handler.
         add_action('template_redirect', array(__CLASS__, 'handle_ical_download'));
+    }
+
+    /**
+     * Initialize GitHub updater
+     */
+    private static function init_github_updater()
+    {
+        // Only load in admin or when checking for updates.
+        if (is_admin() || wp_doing_cron()) {
+            new Updater(GFORM_BOOKING_PLUGIN_FILE);
+        }
     }
 
     /**
@@ -111,6 +126,9 @@ class Autoloader
             GFORM_BOOKING_VERSION
         );
 
+        // Enqueue dynamic color styles
+        wp_add_inline_style('gf-booking-frontend', self::get_dynamic_colors_css());
+
         wp_enqueue_script(
             'gf-booking-frontend',
             GFORM_BOOKING_PLUGIN_URL . 'assets/js/frontend.js',
@@ -126,12 +144,23 @@ class Autoloader
                 'ajaxUrl'   => admin_url('admin-ajax.php'),
                 'nonce'     => wp_create_nonce('gf_booking_nonce'),
                 'timeFormat' => get_option('time_format'),
+                'currency'  => \GFormBooking\Admin::get_currency(),
                 'strings'   => array(
                     'loading'   => __('Loading...', 'gform-booking'),
                     'noSlots'   => __('No available time slots', 'gform-booking'),
                     'error'     => __('An error occurred. Please try again.', 'gform-booking'),
                     'confirm'   => __('Are you sure?', 'gform-booking'),
                     'success'   => __('Success!', 'gform-booking'),
+                    // Provide both singular and plural forms for JavaScript
+                    'slot'      => array(
+                        'singular' => __('slot', 'gform-booking'),
+                        'plural'   => __('slots', 'gform-booking'),
+                    ),
+                    'spot'      => array(
+                        'singular' => __('spot', 'gform-booking'),
+                        'plural'   => __('spots', 'gform-booking'),
+                    ),
+                    'left'      => __('left', 'gform-booking'),
                 ),
             )
         );
@@ -249,17 +278,52 @@ class Autoloader
      */
     public static function handle_public_management()
     {
-        // Check if this is an appointment management request.
-        if (! isset($_GET['gf_booking']) || $_GET['gf_booking'] !== 'manage') {
+        // Get management page ID from settings
+        $management_page_id = 0;
+        $gf_addon = \GFormBooking\GF_Addon::get_instance();
+        if ($gf_addon && method_exists($gf_addon, 'get_plugin_settings')) {
+            $settings = $gf_addon->get_plugin_settings();
+            $management_page_id = isset($settings['management_page_id']) ? absint($settings['management_page_id']) : 0;
+        }
+
+        // Check if this is an appointment management request (new way with token on page, or old way with gf_booking param)
+        $is_old_url = isset($_GET['gf_booking']) && $_GET['gf_booking'] === 'manage';
+        $has_token = isset($_GET['token']) && !empty($_GET['token']);
+
+        // If we have a management page configured, check if we're on it
+        $is_on_management_page = false;
+        if ($management_page_id > 0) {
+            $is_on_management_page = is_page($management_page_id);
+        }
+
+        // If neither old URL nor on management page with token, return early
+        if (! $is_old_url && (! $is_on_management_page || ! $has_token)) {
             return;
         }
 
-        // Get appointment ID and token.
-        $appointment_id = isset($_GET['appointment']) ? absint($_GET['appointment']) : 0;
+        // Get token and appointment ID
         $token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
 
-        if (! $appointment_id || ! $token) {
-            wp_die(__('Invalid request.', 'gform-booking'));
+        // Try old URL format first (has appointment ID)
+        $appointment_id = isset($_GET['appointment']) ? absint($_GET['appointment']) : 0;
+
+        if (! $token) {
+            // No token provided - show error or redirect
+            wp_die(__('Invalid request. A valid appointment token is required.', 'gform-booking'));
+        }
+
+        // If no appointment ID in URL, we need to find it by token
+        if (! $appointment_id) {
+            global $wpdb;
+            $table = $wpdb->prefix . 'gf_booking_appointments';
+            $appointment_id = $wpdb->get_var($wpdb->prepare(
+                "SELECT id FROM $table WHERE token = %s",
+                $token
+            ));
+
+            if (! $appointment_id) {
+                wp_die(__('Invalid or expired token.', 'gform-booking'));
+            }
         }
 
         // Verify token and load appointment.
@@ -271,6 +335,18 @@ class Autoloader
 
         // Handle modification if requested.
         if (isset($_POST['modify_appointment']) && $_POST['modify_appointment'] === 'yes') {
+            // Enforce cutoff if configured.
+            $service = new \GFormBooking\Service($appointment->get('service_id'));
+            $settings = $service->exists() ? $service->get('settings') : array();
+            $cutoff_hours = isset($settings['cutoff_hours']) ? absint($settings['cutoff_hours']) : 0;
+            if ($cutoff_hours > 0) {
+                $now = current_time('timestamp');
+                $appt_ts = strtotime($appointment->get('appointment_date') . ' ' . $appointment->get('start_time'));
+                if ($appt_ts - ($cutoff_hours * 3600) <= $now) {
+                    $error_message = sprintf(esc_html__('Modifications are not allowed within %d hours of the appointment.', 'gform-booking'), $cutoff_hours);
+                }
+            }
+
             $new_date = isset($_POST['new_date']) ? sanitize_text_field($_POST['new_date']) : '';
             $new_time = isset($_POST['new_time']) ? sanitize_text_field($_POST['new_time']) : '';
 
@@ -294,14 +370,69 @@ class Autoloader
 
         // Handle cancellation if requested.
         if (isset($_POST['cancel_appointment']) && $_POST['cancel_appointment'] === 'yes') {
-            if ($appointment->cancel()) {
+            // Enforce cutoff if configured.
+            $service = new \GFormBooking\Service($appointment->get('service_id'));
+            $settings = $service->exists() ? $service->get('settings') : array();
+            $cutoff_hours = isset($settings['cutoff_hours']) ? absint($settings['cutoff_hours']) : 0;
+            if ($cutoff_hours > 0) {
+                $now = current_time('timestamp');
+                $appt_ts = strtotime($appointment->get('appointment_date') . ' ' . $appointment->get('start_time'));
+                if ($appt_ts - ($cutoff_hours * 3600) <= $now) {
+                    $error_message = sprintf(esc_html__('Cancellations are not allowed within %d hours of the appointment.', 'gform-booking'), $cutoff_hours);
+                }
+            }
+
+            if (empty($error_message) && $appointment->cancel()) {
                 $success_message = __('Your appointment has been cancelled.', 'gform-booking');
             } else {
                 $error_message = __('Failed to cancel appointment. Please try again.', 'gform-booking');
             }
         }
 
-        // Display management page.
+        // Get formatted dates for template
+        $date_format = get_option('date_format');
+        $time_format = get_option('time_format');
+        $appointment_date = date_i18n($date_format, strtotime($appointment->get('appointment_date')));
+        $start_time = date_i18n($time_format, strtotime($appointment->get('start_time')));
+        $end_time = date_i18n($time_format, strtotime($appointment->get('end_time')));
+        $status = $appointment->get('status');
+
+        // Get management page ID from settings
+        $management_page_id = 0;
+        $gf_addon = \GFormBooking\GF_Addon::get_instance();
+        if ($gf_addon && method_exists($gf_addon, 'get_plugin_settings')) {
+            $settings = $gf_addon->get_plugin_settings();
+            $management_page_id = isset($settings['management_page_id']) ? absint($settings['management_page_id']) : 0;
+        }
+
+        // If using a management page, inject content via filter
+        if ($management_page_id > 0) {
+            add_filter('the_content', function ($content) use ($appointment, $token, $success_message, $error_message) {
+                // Only inject if we have valid appointment data
+                if (!$appointment || !$appointment->exists()) {
+                    return $content;
+                }
+
+                // Prepare variables for template
+                $date_format = get_option('date_format');
+                $time_format = get_option('time_format');
+                $appointment_date = date_i18n($date_format, strtotime($appointment->get('appointment_date')));
+                $start_time = date_i18n($time_format, strtotime($appointment->get('start_time')));
+                $end_time = date_i18n($time_format, strtotime($appointment->get('end_time')));
+                $status = $appointment->get('status');
+
+                // Render management content
+                ob_start();
+                include GFORM_BOOKING_PLUGIN_DIR . 'templates/management-content.php';
+                $management_content = ob_get_clean();
+                return $management_content;
+            }, 999);
+
+            // Don't exit, let WordPress show the page normally
+            return;
+        }
+
+        // Old method: custom rendering
         self::render_public_management_page($appointment, $token, isset($success_message) ? $success_message : '', isset($error_message) ? $error_message : '');
         exit;
     }
@@ -325,159 +456,286 @@ class Autoloader
         $status = $appointment->get('status');
         $participants = $appointment->get('participants') ?: 1;
 
-        // Load active theme for proper styling.
-        get_header();
+        // Load active theme for proper styling - handle both classic and block themes.
+        if (function_exists('wp_is_block_theme') && wp_is_block_theme()) {
+            // Block theme: Use block theme template loading
 ?>
-        <div class="gf-booking-management" style="max-width: 600px; margin: 50px auto; padding: 20px;">
-            <h1><?php esc_html_e('Manage Your Appointment', 'gform-booking'); ?></h1>
+            <!DOCTYPE html>
+            <html <?php language_attributes(); ?>>
 
-            <?php if ($success_message): ?>
-                <div class="notice notice-success" style="padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 3px; margin: 20px 0;">
-                    <p><?php echo esc_html($success_message); ?></p>
-                </div>
-            <?php endif; ?>
+            <head>
+                <meta charset="<?php bloginfo('charset'); ?>">
+                <meta name="viewport" content="width=device-width, initial-scale=1">
+                <?php wp_head(); ?>
+            </head>
 
-            <?php if ($error_message): ?>
-                <div class="notice notice-error" style="padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; margin: 20px 0;">
-                    <p><?php echo esc_html($error_message); ?></p>
-                </div>
-            <?php endif; ?>
+            <body <?php body_class(); ?>>
+                <?php wp_body_open(); ?>
+                <div class="wp-site-blocks">
+                <?php
+                // Block themes use block templates - get header template part if available
+                if (locate_template('parts/header.html')) {
+                    echo '<header class="wp-block-template-part">';
+                    block_template_part('header');
+                    echo '</header>';
+                }
+            } else {
+                // Classic theme: use traditional header/footer
+                get_header();
+            }
+                ?>
+                <div class="gf-booking-management" style="max-width: 600px; margin: 50px auto; padding: 20px;">
+                    <h1><?php esc_html_e('Manage Your Appointment', 'gform-booking'); ?></h1>
 
-            <?php if ($status === 'confirmed' || $status === 'changed'): ?>
-                <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin: 20px 0;">
-                    <h2><?php esc_html_e('Appointment Details', 'gform-booking'); ?></h2>
-                    <p><strong><?php esc_html_e('Name:', 'gform-booking'); ?></strong> <?php echo esc_html($appointment->get('customer_name')); ?></p>
-                    <p><strong><?php esc_html_e('Date:', 'gform-booking'); ?></strong> <?php echo esc_html($appointment_date); ?></p>
-                    <p><strong><?php esc_html_e('Time:', 'gform-booking'); ?></strong> <?php echo esc_html($start_time); ?> - <?php echo esc_html($end_time); ?></p>
-                </div>
+                    <?php if ($success_message): ?>
+                        <div class="notice notice-success" style="padding: 10px; background: #d4edda; border: 1px solid #c3e6cb; border-radius: 3px; margin: 20px 0;">
+                            <p><?php echo esc_html($success_message); ?></p>
+                        </div>
+                    <?php endif; ?>
 
-                <?php if ($status === 'confirmed' || $status === 'changed'): ?>
-                    <div style="margin: 30px 0; padding: 20px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 3px;">
-                        <h2><?php esc_html_e('Modify Appointment', 'gform-booking'); ?></h2>
-                        <p><?php esc_html_e('Need to change your appointment? Select a new date and time below.', 'gform-booking'); ?></p>
+                    <?php if ($error_message): ?>
+                        <div class="notice notice-error" style="padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; margin: 20px 0;">
+                            <p><?php echo esc_html($error_message); ?></p>
+                        </div>
+                    <?php endif; ?>
 
-                        <?php
-                        // Render calendar for date selection.
-                        wp_enqueue_style('gf-booking-frontend');
-                        wp_enqueue_script('gf-booking-frontend');
-                        wp_localize_script('gf-booking-frontend', 'gfBooking', array(
-                            'ajaxUrl' => admin_url('admin-ajax.php'),
-                            'nonce' => wp_create_nonce('gf_booking_nonce'),
-                            'timeFormat' => get_option('time_format'),
-                            'strings' => array(
-                                'loading' => __('Loading...', 'gform-booking'),
-                                'noSlots' => __('No available time slots', 'gform-booking'),
-                                'error' => __('An error occurred. Please try again.', 'gform-booking'),
-                            ),
-                        ));
+                    <?php if ($status === 'confirmed' || $status === 'changed'): ?>
+                        <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; margin: 20px 0;">
+                            <h2><?php esc_html_e('Appointment Details', 'gform-booking'); ?></h2>
+                            <p><strong><?php esc_html_e('Name:', 'gform-booking'); ?></strong> <?php echo esc_html($appointment->get('customer_name')); ?></p>
+                            <p><strong><?php esc_html_e('Date:', 'gform-booking'); ?></strong> <?php echo esc_html($appointment_date); ?></p>
+                            <p><strong><?php esc_html_e('Time:', 'gform-booking'); ?></strong> <?php echo esc_html($start_time); ?> - <?php echo esc_html($end_time); ?></p>
+                        </div>
 
-                        echo \GFormBooking\Form_Fields::render_calendar_field('', $appointment->get('service_id'));
-                        ?>
+                        <?php if ($status === 'confirmed' || $status === 'changed'): ?>
+                            <div style="margin: 30px 0; padding: 20px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 3px;">
+                                <h2><?php esc_html_e('Modify Appointment', 'gform-booking'); ?></h2>
+                                <p><?php esc_html_e('Need to change your appointment? Select a new date and time below.', 'gform-booking'); ?></p>
 
-                        <form method="post" id="gf-booking-modify-form" style="display: none; margin-top: 20px;">
-                            <input type="hidden" name="modify_appointment" value="yes">
-                            <input type="hidden" name="new_date" id="gf-booking-new-date">
-                            <input type="hidden" name="new_time" id="gf-booking-new-time">
-                            <button type="submit" style="background: #0073aa; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
-                                <?php esc_html_e('Confirm New Appointment Time', 'gform-booking'); ?>
+                                <?php
+                                // Render calendar for date selection.
+                                wp_enqueue_style('gf-booking-frontend');
+                                wp_enqueue_script('gf-booking-frontend');
+                                wp_localize_script('gf-booking-frontend', 'gfBooking', array(
+                                    'ajaxUrl' => admin_url('admin-ajax.php'),
+                                    'nonce' => wp_create_nonce('gf_booking_nonce'),
+                                    'timeFormat' => get_option('time_format'),
+                                    'currency'  => \GFormBooking\Admin::get_currency(),
+                                    'strings' => array(
+                                        'loading' => __('Loading...', 'gform-booking'),
+                                        'noSlots' => __('No available time slots', 'gform-booking'),
+                                        'error' => __('An error occurred. Please try again.', 'gform-booking'),
+                                        // Provide both singular and plural forms for JavaScript
+                                        'slot' => array(
+                                            'singular' => __('slot', 'gform-booking'),
+                                            'plural'   => __('slots', 'gform-booking'),
+                                        ),
+                                        'spot' => array(
+                                            'singular' => __('spot', 'gform-booking'),
+                                            'plural'   => __('spots', 'gform-booking'),
+                                        ),
+                                        'left' => __('left', 'gform-booking'),
+                                    ),
+                                ));
+
+                                echo \GFormBooking\Form_Fields::render_calendar_field('', $appointment->get('service_id'));
+                                ?>
+
+                                <form method="post" id="gf-booking-modify-form" style="display: none; margin-top: 20px;">
+                                    <input type="hidden" name="modify_appointment" value="yes">
+                                    <input type="hidden" name="new_date" id="gf-booking-new-date">
+                                    <input type="hidden" name="new_time" id="gf-booking-new-time">
+                                    <button type="submit" style="background: #0073aa; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
+                                        <?php esc_html_e('Confirm New Appointment Time', 'gform-booking'); ?>
+                                    </button>
+                                </form>
+
+                                <script type="text/javascript">
+                                    jQuery(document).ready(function($) {
+                                        // Listen for time slot selection.
+                                        $(document).on('gf-booking-time-selected', function(e, time) {
+                                            var $calendar = $('.gf-booking-calendar');
+                                            var selectedDate = '';
+
+                                            if ($calendar.hasClass('gf-booking-month-calendar')) {
+                                                selectedDate = $calendar.find('.gf-booking-day.selected').data('date');
+                                            } else {
+                                                selectedDate = $calendar.find('.gf-booking-date').val();
+                                            }
+
+                                            if (selectedDate && time) {
+                                                $('#gf-booking-new-date').val(selectedDate);
+                                                $('#gf-booking-new-time').val(time);
+                                                $('#gf-booking-modify-form').show();
+                                            }
+                                        });
+                                    });
+                                </script>
+                            </div>
+                        <?php endif; ?>
+
+                        <!-- Cancel button: Show for both 'confirmed' and 'changed' status -->
+                        <form method="post" style="margin: 20px 0;">
+                            <h2><?php esc_html_e('Cancel Appointment', 'gform-booking'); ?></h2>
+                            <p><?php esc_html_e('If you need to cancel your appointment, please click the button below. You can always book a new appointment if needed.', 'gform-booking'); ?></p>
+                            <input type="hidden" name="cancel_appointment" value="yes">
+                            <button type="submit" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to cancel this appointment?', 'gform-booking')); ?>');" style="background: #dc3232; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
+                                <?php esc_html_e('Cancel Appointment', 'gform-booking'); ?>
                             </button>
                         </form>
+                    <?php else: ?>
+                        <div class="notice notice-info" style="padding: 10px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 3px; margin: 20px 0;">
+                            <p><?php esc_html_e('This appointment has already been cancelled.', 'gform-booking'); ?></p>
+                        </div>
+                    <?php endif; ?>
 
-                        <script type="text/javascript">
-                            jQuery(document).ready(function($) {
-                                // Listen for time slot selection.
-                                $(document).on('gf-booking-time-selected', function(e, time) {
-                                    var $calendar = $('.gf-booking-calendar');
-                                    var selectedDate = '';
-
-                                    if ($calendar.hasClass('gf-booking-month-calendar')) {
-                                        selectedDate = $calendar.find('.gf-booking-day.selected').data('date');
-                                    } else {
-                                        selectedDate = $calendar.find('.gf-booking-date').val();
-                                    }
-
-                                    if (selectedDate && time) {
-                                        $('#gf-booking-new-date').val(selectedDate);
-                                        $('#gf-booking-new-time').val(time);
-                                        $('#gf-booking-modify-form').show();
-                                    }
-                                });
-                            });
-                        </script>
-                    </div>
-                <?php endif; ?>
-
-                <!-- Cancel button: Show for both 'confirmed' and 'changed' status -->
-                <form method="post" style="margin: 20px 0;">
-                    <h2><?php esc_html_e('Cancel Appointment', 'gform-booking'); ?></h2>
-                    <p><?php esc_html_e('If you need to cancel your appointment, please click the button below. You can always book a new appointment if needed.', 'gform-booking'); ?></p>
-                    <input type="hidden" name="cancel_appointment" value="yes">
-                    <button type="submit" onclick="return confirm('<?php echo esc_js(__('Are you sure you want to cancel this appointment?', 'gform-booking')); ?>');" style="background: #dc3232; color: white; padding: 10px 20px; border: none; border-radius: 3px; cursor: pointer;">
-                        <?php esc_html_e('Cancel Appointment', 'gform-booking'); ?>
-                    </button>
-                </form>
-            <?php else: ?>
-                <div class="notice notice-info" style="padding: 10px; background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 3px; margin: 20px 0;">
-                    <p><?php esc_html_e('This appointment has already been cancelled.', 'gform-booking'); ?></p>
+                    <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                        <a href="<?php echo esc_url(home_url()); ?>"><?php esc_html_e('Return to homepage', 'gform-booking'); ?></a>
+                    </p>
                 </div>
-            <?php endif; ?>
+                <?php
+                // Load footer for block or classic theme
+                if (function_exists('wp_is_block_theme') && wp_is_block_theme()) {
+                    // Block themes use block templates - get footer template part if available
+                    echo '<footer class="wp-block-template-part">';
+                    if (locate_template('parts/footer.html')) {
+                        block_template_part('footer');
+                    }
+                    echo '</footer>';
+                ?>
+                </div>
+                <?php wp_footer(); ?>
+            </body>
 
-            <p style="margin-top: 30px; font-size: 14px; color: #666;">
-                <a href="<?php echo esc_url(home_url()); ?>"><?php esc_html_e('Return to homepage', 'gform-booking'); ?></a>
-            </p>
-        </div>
-    <?php
-        get_footer();
-    }
+            </html>
+        <?php
+                } else {
+                    // Classic theme: use traditional footer
+                    get_footer();
+                }
+            }
 
-    /**
-     * Handle iCal download
-     */
-    public static function handle_ical_download()
-    {
-        // Check if this is an iCal download request.
-        if (! isset($_GET['gf_booking']) || $_GET['gf_booking'] !== 'ical') {
-            return;
-        }
+            /**
+             * Handle iCal download
+             */
+            public static function handle_ical_download()
+            {
+                // Check if this is an iCal download request.
+                if (! isset($_GET['gf_booking']) || $_GET['gf_booking'] !== 'ical') {
+                    return;
+                }
 
-        // Get appointment ID.
-        $appointment_id = isset($_GET['appointment']) ? absint($_GET['appointment']) : 0;
+                // Get appointment ID.
+                $appointment_id = isset($_GET['appointment']) ? absint($_GET['appointment']) : 0;
 
-        if (! $appointment_id) {
-            wp_die(__('Invalid request.', 'gform-booking'));
-        }
+                if (! $appointment_id) {
+                    wp_die(__('Invalid request.', 'gform-booking'));
+                }
 
-        // Load appointment.
-        $appointment = new Appointment($appointment_id);
+                // Load appointment.
+                $appointment = new Appointment($appointment_id);
 
-        if (! $appointment->exists()) {
-            wp_die(__('Appointment not found.', 'gform-booking'));
-        }
+                if (! $appointment->exists()) {
+                    wp_die(__('Appointment not found.', 'gform-booking'));
+                }
 
-        // Generate iCal content.
-        $ical_content = Confirmation::generate_ical_content($appointment);
+                // Generate iCal content.
+                $ical_content = Confirmation::generate_ical_content($appointment);
 
-        // Set headers for opening in calendar app (not attachment).
-        header('Content-Type: text/calendar; charset=utf-8');
-        header('Content-Disposition: inline; filename="appointment-' . $appointment_id . '.ics"');
-        header('Content-Length: ' . strlen($ical_content));
-        header('Cache-Control: no-cache, must-revalidate');
-        header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+                // Set headers for opening in calendar app (not attachment).
+                header('Content-Type: text/calendar; method=PUBLISH; charset=utf-8');
+                header('Content-Disposition: inline; filename="appointment-' . $appointment_id . '.ics"');
+                header('Content-Length: ' . strlen($ical_content));
+                header('Cache-Control: no-cache, must-revalidate');
+                header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
 
-        // Output iCal content.
-        echo $ical_content;
-        exit;
-    }
+                // Output iCal content.
+                echo $ical_content;
+                exit;
+            }
 
-    /**
-     * Show notice if Gravity Forms is not installed
-     */
-    public static function gravity_forms_missing_notice()
-    {
-    ?>
+            /**
+             * Show notice if Gravity Forms is not installed
+             */
+            public static function gravity_forms_missing_notice()
+            {
+        ?>
         <div class="notice notice-error">
             <p><?php esc_html_e('GF Booking requires Gravity Forms to be installed and activated.', 'gform-booking'); ?></p>
         </div>
 <?php
-    }
-}
+            }
+
+            /**
+             * Get dynamic color CSS based on settings
+             * 
+             * @return string CSS with color overrides
+             */
+            public static function get_dynamic_colors_css()
+            {
+                $gf_addon = \GFormBooking\GF_Addon::get_instance();
+                if (!$gf_addon) {
+                    return '';
+                }
+
+                $settings = $gf_addon->get_plugin_settings();
+                if (!isset($settings['colors']) || !is_array($settings['colors'])) {
+                    return '';
+                }
+
+                $colors = $settings['colors'];
+                $css = ':root { ';
+
+                if (!empty($colors['primary'])) {
+                    $css .= '--gf-booking-primary: ' . esc_attr($colors['primary']) . '; ';
+                }
+                if (!empty($colors['primary_hover'])) {
+                    $css .= '--gf-booking-primary-hover: ' . esc_attr($colors['primary_hover']) . '; ';
+                }
+                if (!empty($colors['secondary_bg'])) {
+                    $css .= '--gf-booking-secondary-bg: ' . esc_attr($colors['secondary_bg']) . '; ';
+                }
+                if (!empty($colors['secondary_border'])) {
+                    $css .= '--gf-booking-secondary-border: ' . esc_attr($colors['secondary_border']) . '; ';
+                }
+                if (!empty($colors['success_bg'])) {
+                    $css .= '--gf-booking-success-bg: ' . esc_attr($colors['success_bg']) . '; ';
+                }
+                if (!empty($colors['success_border'])) {
+                    $css .= '--gf-booking-success-border: ' . esc_attr($colors['success_border']) . '; ';
+                }
+                if (!empty($colors['error_bg'])) {
+                    $css .= '--gf-booking-error-bg: ' . esc_attr($colors['error_bg']) . '; ';
+                }
+                if (!empty($colors['error_border'])) {
+                    $css .= '--gf-booking-error-border: ' . esc_attr($colors['error_border']) . '; ';
+                }
+                if (!empty($colors['info_bg'])) {
+                    $css .= '--gf-booking-info-bg: ' . esc_attr($colors['info_bg']) . '; ';
+                }
+                if (!empty($colors['info_border'])) {
+                    $css .= '--gf-booking-info-border: ' . esc_attr($colors['info_border']) . '; ';
+                }
+                if (!empty($colors['warning_bg'])) {
+                    $css .= '--gf-booking-warning-bg: ' . esc_attr($colors['warning_bg']) . '; ';
+                }
+                if (!empty($colors['warning_border'])) {
+                    $css .= '--gf-booking-warning-border: ' . esc_attr($colors['warning_border']) . '; ';
+                }
+                if (!empty($colors['calendar_header_bg'])) {
+                    $css .= '--gf-booking-calendar-header-bg: ' . esc_attr($colors['calendar_header_bg']) . '; ';
+                }
+                if (!empty($colors['calendar_available_bg'])) {
+                    $css .= '--gf-booking-calendar-available-bg: ' . esc_attr($colors['calendar_available_bg']) . '; ';
+                }
+                if (!empty($colors['calendar_unavailable_bg'])) {
+                    $css .= '--gf-booking-calendar-unavailable-bg: ' . esc_attr($colors['calendar_unavailable_bg']) . '; ';
+                }
+                if (!empty($colors['calendar_day_hover'])) {
+                    $css .= '--gf-booking-calendar-day-hover: ' . esc_attr($colors['calendar_day_hover']) . '; ';
+                }
+
+                $css .= '}';
+                return $css;
+            }
+        }

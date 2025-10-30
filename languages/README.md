@@ -43,6 +43,30 @@ After editing a `.po` file, compile it to a `.mo` file using a tool like:
 
 WordPress will automatically load `.mo` files placed in this directory.
 
+## Automatically Generating .pot Files
+
+To automatically generate the `.pot` file from the plugin code, run:
+
+```bash
+# Using WordPress i18n tools (recommended)
+i18n make-pot languages gform-booking.pot --include="*.php" --headers=header.txt --domain=gform-booking
+
+# Or using WP-CLI (if installed)
+wp i18n make-pot languages gform-booking.pot --include="*.php" --headers=header.txt --domain=gform-booking
+```
+
+For easy access, you can add a npm script to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "pot": "i18n make-pot languages gform-booking.pot --include=\"*.php\" --headers=header.txt --domain=gform-booking"
+  }
+}
+```
+
+Then run: `npm run pot`
+
 ## Language Locale Codes
 
 Common locale codes for translations:

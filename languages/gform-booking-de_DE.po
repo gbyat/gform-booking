@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gform-booking 1.0.0\n"
 "Report-Msgid-Bugs-To: https://webentwicklerin.at\n"
-"POT-Creation-Date: 2025-01-27 16:00+0000\n"
-"PO-Revision-Date: 2025-10-27 16:46+0100\n"
+"POT-Creation-Date: 2025-10-30 11:50+0000\n"
+"PO-Revision-Date: 2025-10-30 13:26+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de_DE\n"
@@ -19,451 +19,1043 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 3.8\n"
 
-#: includes/class-admin.php
+#: ../includes/class-admin.php:55, ../includes/class-admin.php:56
 msgid "GF Booking"
 msgstr ""
 
-msgid "Dashboard"
-msgstr "Dashboard"
-
-msgid "Services"
-msgstr "Dienste"
-
-msgid "Appointments"
-msgstr "Termine"
-
-msgid "Add New Service"
-msgstr "Neue Dienstleistung hinzufügen"
-
-msgid "Edit Service"
-msgstr "Service bearbeiten"
-
-msgid "Service Name"
-msgstr "Service Name"
-
-msgid "Enter service name"
-msgstr "Servicename"
-
-msgid "Slot Duration (minutes)"
-msgstr ""
-
-msgid "Allowed Weekdays"
-msgstr ""
-
-msgid "Monday"
-msgstr "Montag"
-
-msgid "Tuesday"
-msgstr "Dienstag"
-
-msgid "Wednesday"
-msgstr "Mittwoch"
-
-msgid "Thursday"
-msgstr "Donnerstag"
-
-msgid "Friday"
-msgstr "Freitag"
-
-msgid "Saturday"
-msgstr "Samstag"
-
-msgid "Sunday"
-msgstr "Sonntag"
-
-msgid "Allowed Times"
-msgstr "Erlaubte Zeiten"
-
-msgid "Start Time"
-msgstr "Startzeit"
-
-msgid "End Time"
-msgstr "Endtermin"
-
-msgid "Add Time"
-msgstr "Zeit hinzufügen"
-
-msgid "Calendar View"
-msgstr "Kalenderansicht"
-
-msgid "Simple Date Picker"
-msgstr ""
-
-msgid "Month Calendar"
-msgstr ""
-
-msgid "Slot Type"
-msgstr ""
-
-msgid "Time-based slots"
-msgstr ""
-
-msgid "Full day"
-msgstr "Ganztägig"
-
-msgid "Half day"
-msgstr ""
-
-msgid "Half Day Settings"
-msgstr ""
-
-msgid "Morning Start"
-msgstr ""
-
-msgid "Morning End"
-msgstr ""
-
-msgid "Afternoon Start"
-msgstr ""
-
-msgid "Afternoon End"
-msgstr ""
-
-msgid "Max Booking Date"
-msgstr "Max Buchungstage"
-
-msgid "Days ahead"
-msgstr ""
-
-msgid "Fixed date"
-msgstr "Festes Datum"
-
-msgid "Max Booking Days"
-msgstr "Max. Buchungstage"
-
-msgid "Max Booking Date (Fixed)"
-msgstr ""
-
-msgid "Excluded Dates"
-msgstr "Ausgeschlossene Termine"
-
-msgid "Select dates to exclude"
-msgstr ""
-
-msgid "Lunch Break"
-msgstr "Mittagspause"
-
-msgid "Enable lunch break"
-msgstr ""
-
-msgid "Lunch Start"
-msgstr ""
-
-msgid "Lunch End"
-msgstr ""
-
-msgid "Max Participants per Slot"
-msgstr ""
-
-msgid "Assigned User"
-msgstr "Zugeordneter Benutzer"
-
-msgid "Select user to receive notifications"
-msgstr ""
-
-msgid "Email Settings"
-msgstr "E-Mail Einstellungen"
-
-msgid "From Name"
-msgstr "Name des Absenders"
-
-msgid "From Email"
-msgstr "E-Mail des Absenders"
-
-msgid "Save Service"
-msgstr "Dienstleitung speichern"
-
-msgid "Delete Service"
-msgstr "Service Löschen"
-
-msgid "Service saved successfully"
-msgstr ""
-
-msgid "Service deleted successfully"
-msgstr ""
-
-msgid "ID"
-msgstr "ID"
-
-msgid "Name"
-msgstr "Name"
-
-msgid "Actions"
-msgstr "Aktionen"
-
-msgid "Edit"
-msgstr "bearbeiten"
-
-msgid "Delete"
-msgstr "Löschen"
-
-msgid "No services found. Add a service to get started."
-msgstr ""
-
-msgid "Customer"
-msgstr "Kunde"
-
-msgid "Email"
-msgstr "E-Mail"
-
-msgid "Phone"
-msgstr "Smartphone"
-
-msgid "Date"
-msgstr "Datum"
-
-msgid "Time"
-msgstr "Uhrzeit"
-
-msgid "Status"
-msgstr "Status"
-
-msgid "Participants"
-msgstr "Teilnehmer"
-
-msgid "Booking Date"
-msgstr "Buchungsdatum"
-
-msgid "View"
-msgstr "Anzeigen"
-
-msgid "Cancel Appointment"
-msgstr "Termin absagen"
-
-msgid "Confirmed"
-msgstr "Bestätigt"
-
-msgid "Cancelled"
-msgstr "storniert"
-
-msgid "Changed"
-msgstr "Geändert"
-
-msgid "Past"
-msgstr "Vergangen"
-
-msgid "No appointments found."
-msgstr "Keine Termine gefunden."
-
-msgid "Are you sure you want to delete this service?"
-msgstr "Soll diese Dienstleistung wirklich gelöscht werden?"
-
-msgid "Are you sure you want to delete this appointment?"
-msgstr "Sind Sie sicher, dass Sie diesen Termin löschen möchten?"
-
-#: includes/class-form-fields.php
-msgid "No booking service available. Please configure a service first."
-msgstr ""
-
-msgid "-- Select a Service --"
-msgstr ""
-
-msgid "Mon"
-msgstr "Mo"
-
-msgid "Tue"
-msgstr "Di."
-
-msgid "Wed"
-msgstr "Mi."
-
-msgid "Thu"
-msgstr "Do."
-
-msgid "Fri"
-msgstr "Fr."
-
-msgid "Sat"
-msgstr "Sa."
-
-msgid "Sun"
-msgstr "So."
-
-msgid "slot"
-msgid_plural "slots"
-msgstr[0] "Termin"
-msgstr[1] "Termine"
-
-msgid "Selected date:"
-msgstr ""
-
-msgid "Available times:"
-msgstr ""
-
-msgid "Previous"
-msgstr "zurück"
-
-msgid "Next"
-msgstr "weiter"
-
-#: includes/class-gf-addon.php
+#: ../includes/class-admin.php:66, ../includes/class-admin.php:67,
+#: ../includes/class-gf-addon.php:121, ../includes/class-gf-addon.php:137
 msgid "Calendar"
 msgstr "Kalender"
 
+#: ../includes/class-admin.php:75, ../includes/class-admin.php:76,
+#: ../includes/class-admin.php:118
+msgid "Services"
+msgstr "Dienste"
+
+#: ../includes/class-admin.php:84, ../includes/class-admin.php:85
+msgid "Appointments"
+msgstr "Termine"
+
+#: ../includes/class-admin.php:101
+msgid ""
+"Welcome to GF Booking. Manage your appointment services and view upcoming "
+"appointments."
+msgstr ""
+"Willkommen bei GF Booking. Verwalten Sie Ihre Terminvereinbarungen und sehen "
+"Sie sich bevorstehende Termine an."
+
+#: ../includes/class-admin.php:122
+msgid "Upcoming Appointments"
+msgstr "Bevorstehende Termine"
+
+#: ../includes/class-admin.php:151, ../includes/class-admin.php:213
+msgid "Add New Service"
+msgstr "Neue Dienstleistung hinzufügen"
+
+#: ../includes/class-admin.php:163
+msgid "Name"
+msgstr "Name"
+
+#: ../includes/class-admin.php:163
+msgid "Schedule"
+msgstr "Zeitplan"
+
+#: ../includes/class-admin.php:163, ../includes/class-admin.php:438,
+#: ../includes/class-admin.php:960
+msgid "Actions"
+msgstr "Aktionen"
+
+#: ../includes/class-admin.php:181
+msgid "Time-based slots"
+msgstr "Zeitbasierte Slots"
+
+#: ../includes/class-admin.php:179, ../includes/class-admin.php:324
+msgid "Daily Time Windows"
+msgstr "Tägliche Zeitfenster"
+
+#: ../includes/class-admin.php:177, ../includes/class-admin.php:412
+msgid "Custom Slots"
+msgstr "Benutzerdefinierte Zeitfenster"
+
+#: ../includes/class-admin.php:193
+msgid "Edit"
+msgstr "bearbeiten"
+
+#: ../includes/class-admin.php:194, ../includes/class-autoloader.php:133
+msgid "Are you sure?"
+msgstr "Sind Sie sicher?"
+
+#: ../includes/class-admin.php:194, ../includes/class-admin.php:480,
+#: ../includes/class-admin.php:761, ../includes/class-admin.php:996
+msgid "Delete"
+msgstr "Löschen"
+
+#: ../includes/class-admin.php:160
+msgid "No services configured yet."
+msgstr "Es sind noch keine Services konfiguriert."
+
+#: ../includes/class-admin.php:213
+msgid "Edit Service"
+msgstr "Service bearbeiten"
+
+#: ../includes/class-admin.php:258
+msgid "Service updated successfully."
+msgstr "Service erfolgreich aktualisiert."
+
+#: ../includes/class-admin.php:261
+msgid "Error saving service. Please try again."
+msgstr "Fehler beim Speichern des Services. Bitte versuchen Sie es erneut."
+
+#: ../includes/class-admin.php:265
+msgid "Back to Services"
+msgstr "zurück zu den Services"
+
+#: ../includes/class-admin.php:275
+msgid "Service Name"
+msgstr "Service Name"
+
+#: ../includes/class-admin.php:279
+msgid "Description"
+msgstr "Beschreibung"
+
+#: ../includes/class-admin.php:283
+msgid "Notify User"
+msgstr "Benutzer benachrichtigen"
+
+#: ../includes/class-admin.php:289
+msgid "Site Admin"
+msgstr "Website-Administrator"
+
+#: ../includes/class-admin.php:296
+msgid ""
+"This user will be notified when bookings are made or cancelled for this "
+"service."
+msgstr ""
+"Dieser Benutzer wird benachrichtigt, wenn Buchungen für diesen Service "
+"vorgenommen oder storniert werden."
+
+#: ../includes/class-admin.php:300
+msgid "Email Sender Name"
+msgstr "Name des E-Mail-Absenders"
+
+#: ../includes/class-admin.php:303
+msgid "The name that appears as sender in confirmation emails."
+msgstr "Der Name, der in Bestätigungs-E-Mails als Absender erscheint."
+
+#: ../includes/class-admin.php:307
+msgid "Email Sender Address"
+msgstr "E-Mail-Absenderadresse"
+
+#: ../includes/class-admin.php:310
+msgid "The email address that appears as sender in confirmation emails."
+msgstr ""
+"Die E-Mail-Adresse, die in Bestätigungs-E-Mails als Absender angezeigt wird."
+
+#: ../includes/class-admin.php:314
+msgid "Booking Type"
+msgstr "Buchungstyp"
+
+#: ../includes/class-admin.php:317
+msgid "Fixed Duration Slots (e.g., 30min intervals)"
+msgstr "Feste Zeitfenster (z. B. 30-Minuten-Intervalle)"
+
+#: ../includes/class-admin.php:318
+msgid "Custom Slots (e.g., half day, full day)"
+msgstr "Individuelle Zeitfenster (z. B. halber Tag, ganzer Tag)"
+
+#: ../includes/class-admin.php:320
+msgid ""
+"Fixed Duration: Creates slots based on duration. Custom: Define your own "
+"slots (e.g., 8am-12pm, 1pm-5pm) with individual capacity."
+msgstr ""
+"Feste Dauer: Erstellt Slots basierend auf der Dauer. Benutzerdefiniert: "
+"Definieren Sie Ihre eigenen Slots (z. B. 8:00–12:00 Uhr, 13:00–17:00 Uhr) "
+"mit individueller Kapazität."
+
+#: ../includes/class-admin.php:335
+msgid "Monday"
+msgstr "Montag"
+
+#: ../includes/class-admin.php:336
+msgid "Tuesday"
+msgstr "Dienstag"
+
+#: ../includes/class-admin.php:337
+msgid "Wednesday"
+msgstr "Mittwoch"
+
+#: ../includes/class-admin.php:338
+msgid "Thursday"
+msgstr "Donnerstag"
+
+#: ../includes/class-admin.php:339
+msgid "Friday"
+msgstr "Freitag"
+
+#: ../includes/class-admin.php:340
+msgid "Saturday"
+msgstr "Samstag"
+
+#: ../includes/class-admin.php:341
+msgid "Sunday"
+msgstr "Sonntag"
+
+#: ../includes/class-admin.php:373
+msgid "Closed"
+msgstr "Geschlossen"
+
+#: ../includes/class-admin.php:382, ../includes/class-admin.php:718
+msgid "From:"
+msgstr "von:"
+
+#: ../includes/class-admin.php:385, ../includes/class-admin.php:719
+msgid "To:"
+msgstr "an:"
+
+#: ../includes/class-admin.php:388, ../includes/class-admin.php:720
+msgid "Remove"
+msgstr "entfernen"
+
+#: ../includes/class-admin.php:392
+msgid "Add Time Window"
+msgstr "Zeitfenster hinzufügen"
+
+#: ../includes/class-admin.php:398
+msgid ""
+"Configure time windows for each day of the week. Use \"Closed\" to block a "
+"day completely, or add multiple time windows for morning/afternoon sessions."
+msgstr ""
+"Konfigurieren Sie Zeitfenster für jeden Wochentag. Verwenden Sie "
+"„Geschlossen“, um einen Tag vollständig zu sperren, oder fügen Sie mehrere "
+"Zeitfenster für Vormittags-/Nachmittagssitzungen hinzu."
+
+#: ../includes/class-admin.php:404
+msgid "Slot Duration (minutes)"
+msgstr "Slot-Dauer (Minuten)"
+
+#: ../includes/class-admin.php:408
+msgid "Buffer Time (minutes)"
+msgstr "Pufferzeit (Minuten)"
+
+#: ../includes/class-admin.php:433
+msgid "Start Time"
+msgstr "Startzeit"
+
+#: ../includes/class-admin.php:434
+msgid "End Time"
+msgstr "Endtermin"
+
+#: ../includes/class-admin.php:435
+msgid "Days"
+msgstr "Tage"
+
+#: ../includes/class-admin.php:436
+msgid "Capacity"
+msgstr "Kapazität"
+
+#: ../includes/class-admin.php:437
+msgid "Price"
+msgstr "Preis"
+
+#: ../includes/class-admin.php:477, ../includes/class-admin.php:760
+msgid "e.g., €450"
+msgstr "z.B. €450"
+
+#: ../includes/class-admin.php:486
+msgid "Add New Custom Slot"
+msgstr "Neues benutzerdefiniertes Zeitfenster hinzufügen"
+
+#: ../includes/class-admin.php:487
+msgid ""
+"Define custom time slots (e.g., morning 8am-12pm, afternoon 1pm-5pm). Each "
+"slot can have different capacity, price, and availability days. Slots can "
+"overlap."
+msgstr ""
+"Definieren Sie benutzerdefinierte Zeitfenster (z. B. vormittags von 8 bis 12 "
+"Uhr, nachmittags von 13 bis 17 Uhr). Jedes Zeitfenster kann unterschiedliche "
+"Kapazitäten und Verfügbarkeitstage haben."
+
+#: ../includes/class-admin.php:492
+msgid "Max Participants per Slot"
+msgstr "Maximale Teilnehmerzahl pro Zeitfenster"
+
+#: ../includes/class-admin.php:498
+msgid ""
+"Maximum number of people that can book the same time slot. Set to 1 for "
+"exclusive slots."
+msgstr ""
+"Maximale Anzahl von Personen, die denselben Zeitblock buchen können. Setzen "
+"Sie den Wert auf 1 für exklusive Zeitblöcke."
+
+#: ../includes/class-admin.php:502
+msgid "Price per Slot"
+msgstr "Preis je Zeitblock"
+
+#: ../includes/class-admin.php:509
+msgid ""
+"Price per slot in %s format (e.g., %s450.00). Leave empty for free slots."
+msgstr ""
+"Preis pro Zeitblock im Format %s (z. B. %s450,00). Für kostenlose Slots leer "
+"lassen."
+
+#: ../includes/class-admin.php:513
+msgid "Allow Multiple Slot Bookings"
+msgstr "Mehrfachbuchungen zulassen"
+
+#: ../includes/class-admin.php:520
+msgid "Enable customers to book multiple slots at once"
+msgstr "Kunden die Möglichkeit geben, mehrere Termine gleichzeitig zu buchen"
+
+#: ../includes/class-admin.php:522
+msgid ""
+"When enabled, customers can select multiple slots (e.g., morning + "
+"afternoon). If slots are on the same day, they can be merged into one "
+"appointment."
+msgstr ""
+"Wenn diese Option aktiviert ist, können Kunden mehrere Zeitfenster auswählen "
+"(z. B. vormittags + nachmittags). Wenn die Zeitfenster auf denselben Tag "
+"fallen, können sie zu einem Termin zusammengefasst werden."
+
+#: ../includes/class-admin.php:526
+msgid "Calendar View"
+msgstr "Kalenderansicht"
+
+#: ../includes/class-admin.php:529
+msgid "Simple Date Picker"
+msgstr "Einfacher Datumswähler"
+
+#: ../includes/class-admin.php:530
+msgid "Month Calendar"
+msgstr "Monatskalender"
+
+#: ../includes/class-admin.php:535
+msgid "Min Booking Date"
+msgstr "Mindestbuchungsdatum"
+
+#: ../includes/class-admin.php:538
+msgid "Days Ahead (from today)"
+msgstr "Tage bis (ab heute)"
+
+#: ../includes/class-admin.php:539, ../includes/class-admin.php:548
+msgid "Fixed Start Date"
+msgstr "Festes Startdatum."
+
+#: ../includes/class-admin.php:544
+msgid "Earliest Days Ahead"
+msgstr "Früheste Tage in der Zukunft"
+
+#: ../includes/class-admin.php:552
+msgid "Max Booking Date"
+msgstr "Max Buchungstage"
+
+#: ../includes/class-admin.php:555, ../includes/class-admin.php:561
+msgid "Days Ahead"
+msgstr "Tage in der Zukunft"
+
+#: ../includes/class-admin.php:556
+msgid "Fixed Date"
+msgstr "Fixes Datum"
+
+#: ../includes/class-admin.php:565
+msgid "Fixed End Date"
+msgstr "Festes Enddatum."
+
+#: ../includes/class-admin.php:569
+msgid "Excluded Dates"
+msgstr "Ausgeschlossene Termine"
+
+#: ../includes/class-admin.php:583
+msgid "Add Date"
+msgstr "Datum hinzufügen"
+
+#: ../includes/class-admin.php:584
+msgid "Select specific dates to block (e.g., holidays)."
+msgstr ""
+"Wählen Sie bestimmte Daten aus, die Sie sperren möchten (z. B. Feiertage)."
+
+#: ../includes/class-admin.php:592
+msgid "Save Service"
+msgstr "Dienstleitung speichern"
+
+#: ../includes/class-admin.php:593, ../includes/class-admin.php:993
+msgid "Cancel"
+msgstr "stornieren"
+
+#: ../includes/class-admin.php:641
+msgid "Please select a date first."
+msgstr "Bitte wählen Sie zuerst ein Datum aus."
+
+#: ../includes/class-admin.php:647
+msgid "This date is already excluded."
+msgstr "Dieser Termin ist bereits ausgeschlossen."
+
+#: ../includes/class-admin.php:937
+msgid "Filter by status:"
+msgstr "Nach Status filtern:"
+
+#: ../includes/class-admin.php:939
+msgid "All"
+msgstr "Alle"
+
+#: ../includes/class-admin.php:940
+msgid "Confirmed"
+msgstr "Bestätigt"
+
+#: ../includes/class-admin.php:941
+msgid "Past"
+msgstr "Vergangen"
+
+#: ../includes/class-admin.php:942
+msgid "Cancelled"
+msgstr "storniert"
+
+#: ../includes/class-admin.php:953
+msgid "Appointment Date & Time"
+msgstr "Termin Datum und Zeit"
+
+#: ../includes/class-admin.php:954
+msgid "Booking Date"
+msgstr "Buchungsdatum"
+
+#: ../includes/class-admin.php:955, ../includes/class-gf-addon.php:419
+msgid "Customer"
+msgstr "Kunde"
+
+#: ../includes/class-admin.php:956
+msgid "Participants"
+msgstr "Teilnehmer"
+
+#: ../includes/class-admin.php:957
+msgid "Contact"
+msgstr "Kontakt"
+
+#: ../includes/class-admin.php:958
+msgid "Service"
+msgstr "Services"
+
+#: ../includes/class-admin.php:959
+msgid "Status"
+msgstr "Status"
+
+#: ../includes/class-admin.php:987, ../includes/class-appointment.php:239,
+#: ../includes/class-appointment.php:293,
+#: ../includes/class-confirmation.php:122
+msgid "N/A"
+msgstr "N/A"
+
+#: ../includes/class-admin.php:996
+msgid "Are you sure you want to delete this appointment?"
+msgstr "Sind Sie sicher, dass Sie diesen Termin löschen möchten?"
+
+#: ../includes/class-admin.php:948
+msgid "No appointments found."
+msgstr "Keine Termine gefunden."
+
+#: ../includes/class-admin.php:1025
+msgid "Appointment cancelled successfully."
+msgstr "Ihr Termin wurde erfolgreich stonriert."
+
+#: ../includes/class-admin.php:1040
+msgid "Appointment deleted successfully."
+msgstr "Termin erfolgreich gelöscht"
+
+#. translators: %s: Site name
+#: ../includes/class-appointment.php:226
+msgid "Appointment Cancelled - %s"
+msgstr "Termin storniert - %s"
+
+#. translators: %1$s: Customer name, %2$s: Date, %3$s: Time, %4$s: Service name
+#: ../includes/class-appointment.php:243
+msgid ""
+"An appointment has been cancelled:\n"
+"\n"
+"Customer: %1$s\n"
+"Email: %2$s\n"
+"Phone: %3$s\n"
+"Date: %4$s\n"
+"Time: %5$s - %6$s\n"
+"Service: %7$s\n"
+"\n"
+"This time slot is now available again."
+msgstr ""
+"Ein neuer Termin wurde storniert:\n"
+"\n"
+"Kunde: %1$s\n"
+"E-Mail: %2$s\n"
+"Telefon: %3$s\n"
+"Datum: %4$s\n"
+"Zeit: %5$s - %6$s\n"
+"Service: %7$s"
+
+#: ../includes/class-appointment.php:246,
+#: ../includes/class-appointment.php:318,
+#: ../includes/class-confirmation.php:129
+msgid "Not provided"
+msgstr "Nicht angegeben"
+
+#. translators: %s: Site name
+#: ../includes/class-appointment.php:309
+msgid "Appointment Modified - %s"
+msgstr "Termin geändert - %s"
+
+#. translators: %1$s: Customer name, %2$s: Email, %3$s: Phone, %4$s: Date, %5$s: Time, %6$s: Service
+#: ../includes/class-appointment.php:315
+msgid ""
+"An appointment has been modified:\n"
+"\n"
+"Customer: %1$s\n"
+"Email: %2$s\n"
+"Phone: %3$s\n"
+"New Date: %4$s\n"
+"New Time: %5$s - %6$s\n"
+"Service: %7$s"
+msgstr ""
+"Ein neuer Termin wurde geändert:\n"
+"\n"
+"Kunde: %1$s\n"
+"E-Mail: %2$s\n"
+"Telefon: %3$s\n"
+"Datum: %4$s\n"
+"Zeit: %5$s - %6$s\n"
+"Service: %7$s"
+
+#: ../includes/class-appointment.php:357
+msgid ""
+"Maximum number of modifications (5) reached for this appointment. Please "
+"contact support if you need further changes."
+msgstr ""
+"Die maximale Anzahl von Änderungen (5) für diesen Termin wurde erreicht. "
+"Bitte wenden Sie sich an den Support, wenn Sie weitere Änderungen benötigen."
+
+#. translators: %d: minutes remaining
+#: ../includes/class-appointment.php:375
+msgid "Please wait %d more minutes before modifying your appointment again."
+msgstr ""
+"Bitte warten Sie noch %d Minuten, bevor Sie Ihren Termin erneut ändern."
+
+#: ../includes/class-autoloader.php:130, ../includes/class-autoloader.php:373
+msgid "Loading..."
+msgstr "Laden..."
+
+#: ../includes/class-autoloader.php:131, ../includes/class-autoloader.php:374
+msgid "No available time slots"
+msgstr "Keine verfügbaren Zeitblöcke"
+
+#: ../includes/class-autoloader.php:132, ../includes/class-autoloader.php:375
+msgid "An error occurred. Please try again."
+msgstr "Ein Fehler ist aufgetreten. Bitte versuche es noch einmal."
+
+#: ../includes/class-autoloader.php:134
+msgid "Success!"
+msgstr "Erfolg!"
+
+#: ../includes/class-autoloader.php:137, ../includes/class-autoloader.php:378
+msgid "slot"
+msgstr "Termin"
+
+#: ../includes/class-autoloader.php:138, ../includes/class-autoloader.php:379
+msgid "slots"
+msgstr "Termine"
+
+#: ../includes/class-autoloader.php:225, ../includes/class-autoloader.php:267,
+#: ../includes/class-autoloader.php:457
+msgid "Invalid request."
+msgstr "Ungültige Anfrage."
+
+#: ../includes/class-autoloader.php:231
+msgid "Invalid token."
+msgstr "Ungültiges Token."
+
+#: ../includes/class-autoloader.php:242
+msgid "Invalid action."
+msgstr "Ungültige Aktion."
+
+#: ../includes/class-autoloader.php:248
+msgid "Failed to update appointment."
+msgstr "Fehler beim Aktualisieren des Termins."
+
+#: ../includes/class-autoloader.php:246
+msgid "Appointment updated successfully."
+msgstr "Termin erfolgreich aktualisiert."
+
+#: ../includes/class-autoloader.php:274
+msgid "Invalid or expired token."
+msgstr "Ungültiger oder abgelaufener Token."
+
+#: ../includes/class-autoloader.php:296
+msgid "Please select a new date and time."
+msgstr "Wählen Sie ein neues Datum und eine neue Uhrzeit aus."
+
+#: ../includes/class-autoloader.php:293
+msgid "Failed to modify appointment. Please try again."
+msgstr "Fehler beim Ändern des Termins. Bitte nochmal versuchen."
+
+#: ../includes/class-autoloader.php:291
+msgid "Your appointment has been modified. A confirmation email has been sent."
+msgstr "Ihr Termin wurde geändert. "
+
+#: ../includes/class-autoloader.php:305
+msgid "Failed to cancel appointment. Please try again."
+msgstr "Fehler bei der Stornierung des Termins. Bitte versuchen Sie es erneut."
+
+#: ../includes/class-autoloader.php:303
+msgid "Your appointment has been cancelled."
+msgstr "Ihren Termin wurde storniert."
+
+#: ../includes/class-autoloader.php:337
+msgid "Manage Your Appointment"
+msgstr "Verwalten Sie Ihren Termin"
+
+#: ../includes/class-autoloader.php:431
+msgid "This appointment has already been cancelled."
+msgstr "Dieser Termin wurde bereits storniert."
+
+#: ../includes/class-autoloader.php:353
+msgid "Appointment Details"
+msgstr "Termin-Details"
+
+#: ../includes/class-autoloader.php:354
+msgid "Name:"
+msgstr "Name:"
+
+#: ../includes/class-autoloader.php:355, ../includes/class-confirmation.php:282
+msgid "Date:"
+msgstr "Datum:"
+
+#: ../includes/class-autoloader.php:356, ../includes/class-confirmation.php:283
+msgid "Time:"
+msgstr "Zeit:"
+
+#: ../includes/class-autoloader.php:361
+msgid "Modify Appointment"
+msgstr "Termin ändern"
+
+#: ../includes/class-autoloader.php:362
+msgid "Need to change your appointment? Select a new date and time below."
+msgstr ""
+"Möchten Sie Ihren Termin ändern? Wählen Sie unten ein neues Datum und eine "
+"neue Uhrzeit aus."
+
+#: ../includes/class-autoloader.php:392
+msgid "Confirm New Appointment Time"
+msgstr "Neue Terminvereinbarung bestätigen"
+
+#: ../includes/class-autoloader.php:422, ../includes/class-autoloader.php:426
+msgid "Cancel Appointment"
+msgstr "Termin absagen"
+
+#: ../includes/class-autoloader.php:423
+msgid ""
+"If you need to cancel your appointment, please click the button below. You "
+"can always book a new appointment if needed."
+msgstr ""
+"Wenn Sie Ihren Termin stornieren möchten, klicken Sie bitte auf die "
+"Schaltfläche unten. Sie können jederzeit einen neuen Termin buchen."
+
+#: ../includes/class-autoloader.php:425
+msgid "Are you sure you want to cancel this appointment?"
+msgstr "Möchten Sie den ausgewählten Termin wirklich löschen?"
+
+#: ../includes/class-autoloader.php:436
+msgid "Return to homepage"
+msgstr "Zur Startseite zurückkehren"
+
+#: ../includes/class-autoloader.php:464
+msgid "Appointment not found."
+msgstr "Termin nicht gefunden"
+
+#: ../includes/class-autoloader.php:489
+msgid "GF Booking requires Gravity Forms to be installed and activated."
+msgstr ""
+"GF Booking erfordert die Installation und Aktivierung von Gravity Forms."
+
+#. translators: %s: Site name
+#: ../includes/class-confirmation.php:38
+msgid "Appointment Confirmation - %s"
+msgstr "Eingangsbestätigung für Terminbuchung - %s"
+
+#. translators: %s: Site name
+#: ../includes/class-confirmation.php:112
+msgid "New Appointment Booking - %s"
+msgstr "Neue Terminbuchung - %s"
+
+#. translators: %1$s: Customer name, %2$s: Email, %3$s: Phone, %4$s: Date, %5$s: Time, %6$s: Service
+#: ../includes/class-confirmation.php:126
+msgid ""
+"A new appointment has been booked:\n"
+"\n"
+"Customer: %1$s\n"
+"Email: %2$s\n"
+"Phone: %3$s\n"
+"Date: %4$s\n"
+"Time: %5$s - %6$s\n"
+"Service: %7$s"
+msgstr ""
+"Ein neuer Termin wurde gebucht:\n"
+"\n"
+"Kunde: %1$s\n"
+"E-Mail: %2$s\n"
+"Telefon: %3$s\n"
+"Datum: %4$s\n"
+"Zeit: %5$s - %6$s\n"
+"Service: %7$s"
+
+#: ../includes/class-confirmation.php:275
+msgid "Appointment Confirmation"
+msgstr "Eingangsbestätigung für eine Terminbuchung"
+
+#: ../includes/class-confirmation.php:277
+msgid "Hello"
+msgstr "Hallo"
+
+#: ../includes/class-confirmation.php:279
+msgid "Your appointment has been confirmed:"
+msgstr "Ihr Termin wurde bestätigt:"
+
+#: ../includes/class-confirmation.php:286
+msgid ""
+"Need to make changes? You can modify or cancel your appointment using the "
+"links below:"
+msgstr ""
+"Falschen Termin gebucht oder verhindert? Über den folgenden Link können Sie "
+"Ihren Termin verwalten oder stornieren:"
+
+#: ../includes/class-confirmation.php:290
+msgid "Modify or Cancel Appointment"
+msgstr "Termin ändern oder absagen"
+
+#: ../includes/class-confirmation.php:293
+msgid "Add to Calendar"
+msgstr "dem Kalender hinzufügen"
+
+#: ../includes/class-confirmation.php:297
+msgid "If you have any questions, please contact us."
+msgstr "Wenn Sie Fragen haben, wenden Sie sich bitte an uns."
+
+#. translators: %s: Site name
+#: ../includes/class-confirmation.php:305
+msgid "This email was sent by %s."
+msgstr "Diese E-Mail wurde von %s gesendet."
+
+#: ../includes/class-confirmation.php:357
+msgid "Appointment"
+msgstr "Termin"
+
+#: ../includes/class-confirmation.php:360
+msgid "Appointment: %s"
+msgstr "Termin: %s"
+
+#: ../includes/class-confirmation.php:366
+msgid "Customer: %s"
+msgstr "Kunde: %s"
+
+#: ../includes/class-confirmation.php:367
+msgid "Email: %s"
+msgstr "E-Mail: %s"
+
+#: ../includes/class-confirmation.php:370
+msgid "Phone: %s"
+msgstr "Telefon: %s"
+
+#: ../includes/class-confirmation.php:374
+msgid "Service: %s"
+msgstr "Leistungen: %s"
+
+#: ../includes/class-form-fields.php:50
+msgid "No booking service available. Please configure a service first."
+msgstr ""
+"Kein Buchungsservice verfügbar. Bitte konfigurieren Sie zuerst einen Service."
+
+#: ../includes/class-form-fields.php:99
+msgid "-- Select a Service --"
+msgstr "-- Service auswählen --"
+
+#: ../includes/class-form-fields.php:180, ../includes/class-form-fields.php:166
+msgid "Available times:"
+msgstr "Verfügbare Zeiten:"
+
+#: ../includes/class-form-fields.php:117
+msgid "Previous"
+msgstr "zurück"
+
+#: ../includes/class-form-fields.php:121
+msgid "Next"
+msgstr "weiter"
+
+#: ../includes/class-form-fields.php:127
+msgid "Mon"
+msgstr "Mo."
+
+#: ../includes/class-form-fields.php:128
+msgid "Tue"
+msgstr "Di."
+
+#: ../includes/class-form-fields.php:129
+msgid "Wed"
+msgstr "Mi."
+
+#: ../includes/class-form-fields.php:130
+msgid "Thu"
+msgstr "Do."
+
+#: ../includes/class-form-fields.php:131
+msgid "Fri"
+msgstr "Fr."
+
+#: ../includes/class-form-fields.php:132
+msgid "Sat"
+msgstr "Sa."
+
+#: ../includes/class-form-fields.php:133
+msgid "Sun"
+msgstr "So."
+
+#: ../includes/class-form-fields.php:151
+msgid "%d slot"
+msgid_plural "%d slots"
+msgstr[0] "%s Termin"
+msgstr[1] "%s Termine"
+
+#: ../includes/class-form-fields.php:164
+msgid "Selected date:"
+msgstr "Ausgewähltes Datum:"
+
+#: ../includes/class-gf-addon.php:521
 msgid "Available Services"
 msgstr "Verfügbare Services"
 
+#: ../includes/class-gf-addon.php:524
 msgid ""
 "Select one or more services. Users will be able to choose from these "
 "services."
 msgstr ""
+"Wählen Sie einen oder mehrere Services aus. Die Benutzer können aus diesen "
+"Services auswählen."
 
+#: ../includes/class-gf-addon.php:536
 msgid "No services available. Please create services first."
-msgstr ""
+msgstr "Keine Services verfügbar. Bitte erstellen Sie zuerst Dienste."
 
+#: ../includes/class-gf-addon.php:544
 msgid "Participants Field"
-msgstr ""
+msgstr "Teilnehmerfeld"
 
+#: ../includes/class-gf-addon.php:547
 msgid "None (default: 1)"
-msgstr ""
+msgstr "Keine (Standard: 1)"
 
+#: ../includes/class-gf-addon.php:549
 msgid ""
 "Select a number field to use for the number of participants. If not set, "
 "defaults to 1."
 msgstr ""
+"Wählen Sie ein Zahlenfeld aus, das für die Anzahl der Teilnehmer verwendet "
+"werden soll. Wenn keine Einstellung vorgenommen wird, wird standardmäßig der "
+"Wert 1 verwendet."
 
-#: includes/class-confirmation.php
-msgid "Appointment Confirmation"
-msgstr "Eingangsbestätigung für eine Terminbuchung"
+#: ../includes/class-gf-addon.php:564
+msgid "General Settings"
+msgstr "Allgemeine Einstellungen"
 
-msgid "Your appointment has been confirmed."
-msgstr ""
+#: ../includes/class-gf-addon.php:568
+msgid "Currency"
+msgstr "Währung"
 
-msgid "Appointment Details:"
-msgstr "Details des Termines:"
+#: ../includes/class-gf-addon.php:572
+msgid "The currency code used for pricing (e.g., EUR, USD, GBP)."
+msgstr "Der für die Preisangabe verwendete Währungscode (z. B. EUR, USD, GBP)."
 
-msgid "Date:"
-msgstr "Datum:"
+msgid "spot"
+msgstr "Platz"
 
-msgid "Time:"
-msgstr "Zeit:"
+msgid "spots"
+msgstr "Plätze"
 
-msgid "Service:"
-msgstr "Service:"
+msgid "left"
+msgstr "frei"
 
-msgid "Manage or Cancel"
-msgstr ""
+msgid "Settings saved successfully."
+msgstr "Einstellungen erfolgreich gespeichert."
 
-msgid "You can manage or cancel your appointment using the link below:"
-msgstr ""
+#~ msgid "Dashboard"
+#~ msgstr "Dashboard"
 
-#: includes/class-appointment.php
-msgid "New Booking Notification"
-msgstr ""
+#~ msgid "Enter service name"
+#~ msgstr "Servicename"
 
-msgid "A new appointment has been booked."
-msgstr ""
+#~ msgid "Available Days"
+#~ msgstr "Verfügbare Tage:"
 
-msgid "Appointment Details"
-msgstr "Termin-Details"
+#~ msgid ""
+#~ "Note: This will override the \"Available Days\" setting above for more "
+#~ "granular control."
+#~ msgstr ""
+#~ "Hinweis: Dadurch wird die oben genannte Einstellung „Verfügbare Tage“ "
+#~ "überschrieben, um eine genauere Steuerung zu ermöglichen."
 
-msgid "Customer Name:"
-msgstr "Kunden Name:"
+#~ msgid "Delete Service"
+#~ msgstr "Service Löschen"
 
-msgid "Customer Email:"
-msgstr "Kunden-E-Mail:"
+#~ msgid "Service saved successfully"
+#~ msgstr "Service erfolgreich gespeichert"
 
-msgid "Customer Phone:"
-msgstr "Kunden Telefon:"
+#~ msgid "ID"
+#~ msgstr "ID"
 
-msgid "Total Participants:"
-msgstr ""
+#~ msgid "No services found. Add a service to get started."
+#~ msgstr ""
+#~ "Keine Services gefunden. Fügen Sie einen Dienst hinzu, um zu beginnen."
 
-msgid "Booking Date:"
-msgstr "Buchungsdatum:"
+#~ msgid "Date"
+#~ msgstr "Datum"
 
-msgid "Appointment Cancelled"
-msgstr "Termin Storniert"
+#~ msgid "Time"
+#~ msgstr "Uhrzeit"
 
-msgid "Your appointment has been cancelled."
-msgstr "Ihren Termin wurde storniert."
+#~ msgid "View"
+#~ msgstr "Anzeigen"
 
-msgid "Appointment Modified"
-msgstr ""
+#~ msgid "Changed"
+#~ msgstr "Geändert"
 
-msgid "Your appointment has been modified."
-msgstr ""
+#~ msgid "Are you sure you want to delete this service?"
+#~ msgstr "Soll diese Dienstleistung wirklich gelöscht werden?"
 
-msgid "New Date:"
-msgstr ""
+#~ msgid "Appointment Details:"
+#~ msgstr "Details des Termines:"
 
-msgid "New Time:"
-msgstr ""
+#~ msgid "Service:"
+#~ msgstr "Service:"
 
-msgid "Appointment Modification"
-msgstr ""
+#~ msgid "Manage or Cancel"
+#~ msgstr "Verwalten oder Stornieren"
 
-msgid "An appointment has been modified."
-msgstr ""
+#~ msgid "New Booking Notification"
+#~ msgstr "Benachrichtigung über neue Buchung"
 
-msgid "Old Date:"
-msgstr ""
+#~ msgid "A new appointment has been booked."
+#~ msgstr "Ein neuer Termin wurde gebucht."
 
-msgid "Old Time:"
-msgstr ""
+#~ msgid "Customer Name:"
+#~ msgstr "Kunden Name:"
 
-#: assets/js/frontend.js (strings object)
-msgid "Loading..."
-msgstr "Laden..."
+#~ msgid "Customer Email:"
+#~ msgstr "Kunden-E-Mail:"
 
-msgid "No slots available"
-msgstr "Keine Slots verfügbar"
+#~ msgid "Customer Phone:"
+#~ msgstr "Kunden Telefon:"
 
-msgid "Error loading data"
-msgstr "Fehler beim Laden von Daten"
+#~ msgid "Total Participants:"
+#~ msgstr "Gesamtzahl der Teilnehmer:"
 
-#: includes/class-autoloader.php
-msgid "Manage Appointment"
-msgstr ""
+#~ msgid "Booking Date:"
+#~ msgstr "Buchungsdatum:"
 
-msgid "Invalid or expired appointment token."
-msgstr ""
+#~ msgid "New Date:"
+#~ msgstr "Neues Datum:"
 
-msgid "Appointment not found."
-msgstr "Termin nicht gefunden"
+#~ msgid "New Time:"
+#~ msgstr "Neue Uhrzeit:"
 
-msgid "Manage Your Appointment"
-msgstr ""
+#~ msgid "Appointment Modification"
+#~ msgstr "New era:"
 
-msgid "Modify Appointment"
-msgstr ""
+#~ msgid "An appointment has been modified."
+#~ msgstr "Ein Termin wurde geändert."
 
-msgid "Select a new date and time:"
-msgstr ""
+#~ msgid "Old Date:"
+#~ msgstr "ursprüngliches Datum:"
 
-msgid "Your appointment has been successfully %s."
-msgstr ""
+#~ msgid "Old Time:"
+#~ msgstr "ursprüngliche Uhrzeit:"
 
-msgid "cancelled"
-msgstr "abgebrochen"
+#~ msgid "No slots available"
+#~ msgstr "Keine Slots verfügbar"
 
-msgid "modified"
-msgstr "geändert"
+#~ msgid "Error loading data"
+#~ msgstr "Fehler beim Laden von Daten"
 
-msgid ""
-"You can no longer modify this appointment (maximum modifications reached)."
-msgstr ""
+#~ msgid "Manage Appointment"
+#~ msgstr "Termin verwalten"
 
-msgid "You can only modify an appointment once every 5 minutes."
-msgstr ""
+#~ msgid "cancelled"
+#~ msgstr "abgebrochen"
 
-msgid "An error occurred. Please try again."
-msgstr "Ein Fehler ist aufgetreten. Bitte versuche es noch einmal."
+#~ msgid "modified"
+#~ msgstr "geändert"
 
-msgid "Are you sure you want to cancel this appointment?"
-msgstr "Möchten Sie den ausgewählten Termin wirklich löschen?"
+#~ msgid ""
+#~ "You can no longer modify this appointment (maximum modifications reached)."
+#~ msgstr ""
+#~ "Sie können diesen Termin nicht mehr ändern (maximale Anzahl an Änderungen "
+#~ "erreicht)."
 
-msgid "Modify"
-msgstr "Modifizieren"
+#~ msgid "Modify"
+#~ msgstr "Modifizieren"
 
-msgid "Appointment for: %s"
-msgstr ""
+#~ msgid "Appointment for: %s"
+#~ msgstr "Termin für: %s"
 
-msgid "Date: %s"
-msgstr "Datum: %s"
+#~ msgid "Date: %s"
+#~ msgstr "Datum: %s"
 
-msgid "Time: %s"
-msgstr "Zeit: %s"
+#~ msgid "Time: %s"
+#~ msgstr "Zeit: %s"
 
-msgid "Service: %s"
-msgstr "Leistungen: %s"
+#~ msgid "Allowed Weekdays"
+#~ msgstr "Erlaubte Wochentage"
+
+#~ msgid "Allowed Times"
+#~ msgstr "Erlaubte Zeiten"
+
+#~ msgid "Slot Type"
+#~ msgstr "Zeitslot-Typ"
+
+#~ msgid "Full day"
+#~ msgstr "Ganztägig"
+
+#~ msgid "Half day"
+#~ msgstr "Halber Tag"
+
+#~ msgid "Half Day Settings"
+#~ msgstr "Halbtags-Einstellungen"
+
+#~ msgid "Morning Start"
+#~ msgstr "Start am Morgen"
+
+#~ msgid "Morning End"
+#~ msgstr "Morgen Ende"
+
+#~ msgid "Afternoon Start"
+#~ msgstr "Nachmittagsbeginn"
+
+#~ msgid "Afternoon End"
+#~ msgstr "Nachmittagsende"
+
+#~ msgid "Max Booking Days"
+#~ msgstr "Max. Buchungstage"
+
+#~ msgid "Max Booking Date (Fixed)"
+#~ msgstr "Tag der letzten Buchung (fest)"
+
+#~ msgid "Select dates to exclude"
+#~ msgstr "Auszuschließende Datümer auswählen"
+
+#~ msgid "Lunch Break"
+#~ msgstr "Mittagspause"
+
+#~ msgid "Enable lunch break"
+#~ msgstr "Mittagspause(n) eingeben"
+
+#~ msgid "Lunch Start"
+#~ msgstr "Mittagspausen Anfang"
+
+#~ msgid "Assigned User"
+#~ msgstr "Zugeordneter Benutzer"
+
+#~ msgid "From Name"
+#~ msgstr "Name des Absenders"
+
+#~ msgid "From Email"
+#~ msgstr "E-Mail des Absenders"

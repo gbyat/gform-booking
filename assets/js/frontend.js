@@ -83,80 +83,47 @@
             loadSlotsForDate($calendar, date, serviceId);
         });
 
-        // Handle time slot selection.
-        $(document).on('click', '.gf-booking-slot:not(.unavailable)', function () {
+        // Handle time slot selection (for single-select mode).
+        // Use div only (not label) to avoid conflicts with multi-select checkboxes.
+        $(document).on('click', '.gf-booking-calendar:not([data-allow-multiple-slots="1"]) .gf-booking-slot:not(.unavailable):not(label)', function () {
             var $slot = $(this);
-            var time = $slot.data('time');
-            var slotType = $slot.data('type');
+            var $calendar = $slot.closest('.gf-booking-calendar');
 
-            // Update selected state.
+            // Single selection (only one slot allowed).
             $slot.siblings().removeClass('selected');
             $slot.addClass('selected');
 
-            // Get the selected date.
-            var $calendar = $slot.closest('.gf-booking-calendar');
-            var selectedDate = '';
-            var serviceId = $calendar.data('service-id');
-
-            // Find the selected date - either from date picker or from selected day.
-            if ($calendar.hasClass('gf-booking-month-calendar')) {
-                var $selectedDay = $calendar.find('.gf-booking-day.selected');
-                if ($selectedDay.length) {
-                    selectedDate = $selectedDay.data('date');
-                }
-            } else {
-                // Simple date picker.
-                var $dateInput = $calendar.find('.gf-booking-date');
-                if ($dateInput.length) {
-                    selectedDate = $dateInput.val();
-                }
-            }
-
-            if (selectedDate && time) {
-                // Calculate end time based on slot type.
-                var endTime = '';
-                if (slotType === 'full_day') {
-                    endTime = $slot.data('end') || '23:59:59';
-                } else if (slotType === 'half_day') {
-                    endTime = $slot.data('end') || '17:00:00';
-                } else {
-                    // Regular time slot - calculate end time from duration (default 30 min).
-                    var timeParts = time.split(':');
-                    var hours = parseInt(timeParts[0]);
-                    var minutes = parseInt(timeParts[1]);
-                    minutes += 30; // Default slot duration.
-                    if (minutes >= 60) {
-                        hours++;
-                        minutes -= 60;
-                    }
-                    endTime = (hours < 10 ? '0' : '') + hours + ':' + (minutes < 10 ? '0' : '') + minutes + ':00';
-                }
-
-                // Format: "YYYY-MM-DD|HH:MM:SS"
-                var fieldValue = selectedDate + '|' + time;
-
-                // Find the hidden input field for this calendar.
-                // First try to find the wrapper.
-                var $wrapper = $calendar.closest('.gf-booking-field-wrapper');
-                var $calendarField;
-
-                if ($wrapper.length > 0) {
-                    $calendarField = $wrapper.find('.gf-booking-value');
-                } else {
-                    // Fallback: look for the hidden input in the same gfield container.
-                    $calendarField = $calendar.closest('.gfield').find('.gf-booking-value');
-                }
-
-                if ($calendarField.length > 0) {
-                    $calendarField.val(fieldValue);
-                    console.log('GF Booking: Set field value to:', fieldValue);
-                } else {
-                    console.warn('GF Booking: Could not find input field for calendar');
-                }
-            }
+            // Update field value with selected slots.
+            var selectedDate = getSelectedDate($calendar);
+            updateFieldValue($calendar, selectedDate, false);
 
             // Trigger custom event.
+            var time = $slot.data('time');
             $calendar.trigger('gf-booking-time-selected', [time]);
+        });
+
+        // Handle multi-select mode: checkbox change event.
+        $(document).on('change', '.gf-booking-calendar .gf-booking-slot input[type="checkbox"]', function () {
+            var $checkbox = $(this);
+            var $slot = $checkbox.closest('.gf-booking-slot');
+            var $calendar = $slot.closest('.gf-booking-calendar');
+            var allowMultipleRaw = $calendar.data('allow-multiple-slots');
+            var allowMultiple = allowMultipleRaw === '1' || allowMultipleRaw === 1;
+
+            // Only handle if multiple slots are allowed.
+            if (!allowMultiple) {
+                return;
+            }
+
+            if ($checkbox.prop('checked')) {
+                $slot.addClass('selected');
+            } else {
+                $slot.removeClass('selected');
+            }
+
+            // Update field value with selected slots.
+            var selectedDate = getSelectedDate($calendar);
+            updateFieldValue($calendar, selectedDate, allowMultiple);
         });
 
         // Handle month navigation.
@@ -333,7 +300,7 @@
                         .attr('data-slots', JSON.stringify(day.slots))
                         .html(
                             '<div class="gf-booking-day-number">' + day.day + '</div>' +
-                            '<div class="gf-booking-slots-count">' + slotsCount + ' slot' + (slotsCount !== 1 ? 's' : '') + '</div>'
+                            '<div class="gf-booking-slots-count">' + slotsCount + ' ' + (slotsCount !== 1 ? gfBooking.strings.slot.plural : gfBooking.strings.slot.singular) + '</div>'
                         );
                     $row.append($cell);
                 } else {
@@ -355,6 +322,10 @@
         // Get the number of participants from the form (if available).
         var participants = getParticipantsCount();
 
+        // Check if multiple slots are allowed (check once before the loop).
+        var allowMultipleRaw = $calendar.data('allow-multiple-slots');
+        var allowMultiple = allowMultipleRaw === '1' || allowMultipleRaw === 1;
+
         $.each(slots, function (index, slot) {
             // Check if this slot has enough capacity for the requested participants.
             if (slot.remaining !== undefined && slot.remaining !== null) {
@@ -375,15 +346,31 @@
                 timeDisplay = formatTime(slot.start) + ' - ' + formatTime(slot.end);
             }
 
-            html += '<div class="gf-booking-slot gf-booking-slot-' + slotType + '" data-time="' + slot.start + '" data-type="' + slotType + '">';
-            html += timeDisplay;
+            // Append price if available
+            if (slot.price !== undefined && slot.price !== null && slot.price !== '') {
+                timeDisplay += '<br>' + (gfBooking.currency ? gfBooking.currency + ' ' : '') + formatPrice(slot.price) + '<br>';
+            }
+
+            // Add checkbox if multiple slots allowed, otherwise use regular slot button.
+            if (allowMultiple) {
+                html += '<label class="gf-booking-slot gf-booking-slot-' + slotType + '" data-time="' + slot.start + '" data-type="' + slotType + '" data-end="' + (slot.end || '') + '"' + (slot.price ? ' data-price="' + slot.price + '"' : '') + '>';
+                html += '<input type="checkbox" value="' + slot.start + '"> ';
+                html += '<span>' + timeDisplay;
+            } else {
+                html += '<div class="gf-booking-slot gf-booking-slot-' + slotType + '" data-time="' + slot.start + '" data-type="' + slotType + '" data-end="' + (slot.end || '') + '"' + (slot.price ? ' data-price="' + slot.price + '"' : '') + '>';
+                html += timeDisplay;
+            }
 
             // Add remaining spots information if available.
             if (slot.remaining !== undefined) {
-                html += ' <span class="gf-booking-spots-remaining">(' + slot.remaining + ' ' + (slot.remaining === 1 ? 'spot' : 'spots') + ' left)</span>';
+                html += ' <span class="gf-booking-spots-remaining">(' + slot.remaining + ' ' + (slot.remaining === 1 ? gfBooking.strings.spot.singular : gfBooking.strings.spot.plural) + ' ' + gfBooking.strings.left + ')</span>';
             }
 
-            html += '</div>';
+            if (allowMultiple) {
+                html += '</span></label>';
+            } else {
+                html += '</div>';
+            }
         });
 
         $slotsContainer.html(html);
@@ -412,6 +399,16 @@
             hours = hours ? hours : 12;
             return hours + ':' + minutes + ' ' + ampm;
         }
+    }
+
+    /**
+     * Format price for display (two decimals)
+     */
+    function formatPrice(value) {
+        var num = (typeof value === 'string') ? value.replace(',', '.') : value;
+        var n = parseFloat(num);
+        if (isNaN(n)) return value;
+        return n.toFixed(2);
     }
 
     /**
@@ -444,6 +441,109 @@
         }
 
         return participants;
+    }
+
+    /**
+     * Get selected date from calendar
+     *
+     * @param {jQuery} $calendar Calendar jQuery object.
+     * @return {string} Selected date in YYYY-MM-DD format.
+     */
+    function getSelectedDate($calendar) {
+        var selectedDate = '';
+
+        if ($calendar.hasClass('gf-booking-month-calendar')) {
+            var $selectedDay = $calendar.find('.gf-booking-day.selected');
+            if ($selectedDay.length) {
+                selectedDate = $selectedDay.data('date');
+            }
+        } else {
+            // Simple date picker.
+            var $dateInput = $calendar.find('.gf-booking-date');
+            if ($dateInput.length) {
+                selectedDate = $dateInput.val();
+            }
+        }
+
+        return selectedDate;
+    }
+
+    /**
+     * Update field value with selected slots
+     *
+     * @param {jQuery} $calendar Calendar jQuery object.
+     * @param {string} selectedDate Selected date in YYYY-MM-DD format.
+     * @param {boolean} allowMultiple Whether multiple slots are allowed.
+     */
+    function updateFieldValue($calendar, selectedDate, allowMultiple) {
+        if (!selectedDate) {
+            return;
+        }
+
+        var selectedSlots = [];
+        var $selectedSlots = $calendar.find('.gf-booking-slot.selected');
+
+        if (allowMultiple) {
+            // Multiple slots: collect all selected slots.
+            $selectedSlots.each(function () {
+                var $slot = $(this);
+                var time = $slot.data('time');
+                if (time) {
+                    selectedSlots.push(selectedDate + 'T' + time);
+                }
+            });
+        } else {
+            // Single slot: only one selection allowed.
+            if ($selectedSlots.length > 0) {
+                var time = $selectedSlots.first().data('time');
+                if (time) {
+                    selectedSlots.push(selectedDate + 'T' + time);
+                }
+            }
+        }
+
+        // Format: Single slot: "YYYY-MM-DDTHH:MM:SS"
+        //         Multiple slots: "YYYY-MM-DDTHH:MM:SS,YYYY-MM-DDTHH:MM:SS,..."
+        var fieldValue = selectedSlots.join(',');
+
+        // Find the hidden input field for this calendar.
+        var $wrapper = $calendar.closest('.gf-booking-field-wrapper');
+        var $calendarField;
+
+        if ($wrapper.length > 0) {
+            $calendarField = $wrapper.find('.gf-booking-value');
+        } else {
+            // Fallback: look for the hidden input in the same gfield container.
+            $calendarField = $calendar.closest('.gfield').find('.gf-booking-value');
+        }
+
+        if ($calendarField.length > 0) {
+            $calendarField.val(fieldValue);
+            console.log('GF Booking: Set field value to:', fieldValue);
+            // Update total price display
+            var total = 0;
+            $selectedSlots.each(function () {
+                var p = $(this).data('price');
+                if (p !== undefined && p !== null && p !== '') {
+                    var num = ('' + p).replace(',', '.');
+                    var n = parseFloat(num);
+                    if (!isNaN(n)) total += n;
+                }
+            });
+            var $info = $calendar.find('.gf-booking-selected-info');
+            if ($info.length) {
+                var text = '';
+                if (total > 0) {
+                    text = (gfBooking.currency ? gfBooking.currency + ' ' : '') + total.toFixed(2);
+                }
+                if ($info.find('.gf-booking-total').length === 0) {
+                    $info.append('<p class="gf-booking-total"></p>');
+                }
+                $info.find('.gf-booking-total').text(text);
+            }
+        } else {
+            console.warn('GF Booking: Could not find input field for calendar');
+        }
     }
 
 })(jQuery);

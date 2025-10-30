@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create ZIP file
+        run: |
+          mkdir -p release
+          zip -r release/gform-booking.zip . \
+            -x "*.git*" \
+            -x "*.DS_Store" \
+            -x "node_modules/*" \
+            -x "*.log" \
+            -x ".vscode/*" \
+            -x ".idea/*" \
+            -x "*.sublime-*" \
+            -x ".env*" \
+            -x "composer.lock" \
+            -x "package-lock.json" \
+            -x ".github/*"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/gform-booking.zip
+          draft: false
+          prerelease: false
+          body: |
+            ## Version ${{ steps.get_version.outputs.VERSION }}
+            
+            See CHANGELOG.md for details.
+            
+            ### Installation
+            
+            1. Download the ZIP file below
+            2. Go to WordPress Admin → Plugins → Add New → Upload Plugin
+            3. Upload the ZIP file and activate
+

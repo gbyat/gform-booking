@@ -1,0 +1,23 @@
+{
+  "name": "gform-booking",
+  "version": "1.0.0",
+  "description": "WordPress booking plugin for Gravity Forms",
+  "scripts": {
+    "pot": "node scripts/generate-pot.js",
+    "release:patch": "node scripts/release.js patch",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gbyat/gform-booking.git"
+  },
+  "author": "Gabriele Laesser <mail@webentwicklerin.at> (https://webentwicklerin.at)",
+  "license": "GPL-2.0-or-later",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "wp-pot": "^1.9.7"
+  }
+}
