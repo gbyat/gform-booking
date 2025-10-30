@@ -31,6 +31,7 @@ INSTALL.md
 TEST.md
 TROUBLESHOOTING.md
 RELEASE-FILES.md
+SECURITY.md
 wp-config-sample.php
 
 # Composer (not used in this plugin)
