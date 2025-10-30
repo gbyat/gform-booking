@@ -1397,9 +1397,23 @@ class Admin
             }
         }
 
-        // Enqueue WordPress color picker
+        // Enqueue WordPress color picker with alpha support
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
+
+        // Register wp-color-picker-alpha with modern loading strategy
+        $args = array(
+            'strategy'  => 'defer',
+            'in_footer' => true,
+        );
+        wp_register_script(
+            'wp-color-picker-alpha',
+            plugins_url('assets/js/wp-color-picker-alpha.js', dirname(__FILE__)),
+            array('jquery', 'wp-color-picker'),
+            '3.0.4',
+            $args
+        );
+        wp_enqueue_script('wp-color-picker-alpha');
 
         // Get theme color palette
         $theme_palette = array();
@@ -1523,7 +1537,7 @@ class Admin
                             <label for="color_primary"><?php esc_html_e('Primary Color', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_primary" name="color_primary" value="<?php echo esc_attr($colors['primary']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_primary" name="color_primary" value="<?php echo esc_attr($colors['primary']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1531,7 +1545,7 @@ class Admin
                             <label for="color_primary_hover"><?php esc_html_e('Primary Hover Color', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_primary_hover" name="color_primary_hover" value="<?php echo esc_attr($colors['primary_hover']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_primary_hover" name="color_primary_hover" value="<?php echo esc_attr($colors['primary_hover']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1544,7 +1558,7 @@ class Admin
                             <label for="color_secondary_bg"><?php esc_html_e('Secondary Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_secondary_bg" name="color_secondary_bg" value="<?php echo esc_attr($colors['secondary_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_secondary_bg" name="color_secondary_bg" value="<?php echo esc_attr($colors['secondary_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1552,7 +1566,7 @@ class Admin
                             <label for="color_secondary_border"><?php esc_html_e('Secondary Border', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_secondary_border" name="color_secondary_border" value="<?php echo esc_attr($colors['secondary_border']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_secondary_border" name="color_secondary_border" value="<?php echo esc_attr($colors['secondary_border']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1565,7 +1579,7 @@ class Admin
                             <label for="color_success_bg"><?php esc_html_e('Success Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_success_bg" name="color_success_bg" value="<?php echo esc_attr($colors['success_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_success_bg" name="color_success_bg" value="<?php echo esc_attr($colors['success_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1573,7 +1587,7 @@ class Admin
                             <label for="color_success_border"><?php esc_html_e('Success Border', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_success_border" name="color_success_border" value="<?php echo esc_attr($colors['success_border']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_success_border" name="color_success_border" value="<?php echo esc_attr($colors['success_border']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1581,7 +1595,7 @@ class Admin
                             <label for="color_error_bg"><?php esc_html_e('Error Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_error_bg" name="color_error_bg" value="<?php echo esc_attr($colors['error_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_error_bg" name="color_error_bg" value="<?php echo esc_attr($colors['error_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1589,7 +1603,7 @@ class Admin
                             <label for="color_error_border"><?php esc_html_e('Error Border', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_error_border" name="color_error_border" value="<?php echo esc_attr($colors['error_border']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_error_border" name="color_error_border" value="<?php echo esc_attr($colors['error_border']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1597,7 +1611,7 @@ class Admin
                             <label for="color_info_bg"><?php esc_html_e('Info Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_info_bg" name="color_info_bg" value="<?php echo esc_attr($colors['info_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_info_bg" name="color_info_bg" value="<?php echo esc_attr($colors['info_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1605,7 +1619,7 @@ class Admin
                             <label for="color_info_border"><?php esc_html_e('Info Border', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_info_border" name="color_info_border" value="<?php echo esc_attr($colors['info_border']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_info_border" name="color_info_border" value="<?php echo esc_attr($colors['info_border']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1613,7 +1627,7 @@ class Admin
                             <label for="color_warning_bg"><?php esc_html_e('Warning Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_warning_bg" name="color_warning_bg" value="<?php echo esc_attr($colors['warning_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_warning_bg" name="color_warning_bg" value="<?php echo esc_attr($colors['warning_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1621,7 +1635,7 @@ class Admin
                             <label for="color_warning_border"><?php esc_html_e('Warning Border', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_warning_border" name="color_warning_border" value="<?php echo esc_attr($colors['warning_border']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_warning_border" name="color_warning_border" value="<?php echo esc_attr($colors['warning_border']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1634,7 +1648,7 @@ class Admin
                             <label for="color_calendar_header_bg"><?php esc_html_e('Calendar Header Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_calendar_header_bg" name="color_calendar_header_bg" value="<?php echo esc_attr($colors['calendar_header_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_calendar_header_bg" name="color_calendar_header_bg" value="<?php echo esc_attr($colors['calendar_header_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1642,7 +1656,7 @@ class Admin
                             <label for="color_calendar_available_bg"><?php esc_html_e('Available Day Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_calendar_available_bg" name="color_calendar_available_bg" value="<?php echo esc_attr($colors['calendar_available_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_calendar_available_bg" name="color_calendar_available_bg" value="<?php echo esc_attr($colors['calendar_available_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1650,7 +1664,7 @@ class Admin
                             <label for="color_calendar_unavailable_bg"><?php esc_html_e('Unavailable Day Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_calendar_unavailable_bg" name="color_calendar_unavailable_bg" value="<?php echo esc_attr($colors['calendar_unavailable_bg']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_calendar_unavailable_bg" name="color_calendar_unavailable_bg" value="<?php echo esc_attr($colors['calendar_unavailable_bg']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                     <tr>
@@ -1658,7 +1672,7 @@ class Admin
                             <label for="color_calendar_day_hover"><?php esc_html_e('Day Hover Background', 'gform-booking'); ?></label>
                         </th>
                         <td>
-                            <input type="text" id="color_calendar_day_hover" name="color_calendar_day_hover" value="<?php echo esc_attr($colors['calendar_day_hover']); ?>" class="gf-booking-color-picker">
+                            <input type="text" id="color_calendar_day_hover" name="color_calendar_day_hover" value="<?php echo esc_attr($colors['calendar_day_hover']); ?>" class="gf-booking-color-picker" data-type="full" data-alpha-enabled="true">
                         </td>
                     </tr>
                 </table>
