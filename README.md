@@ -181,8 +181,6 @@ This plugin follows WordPress security best practices including:
 - Token-based authentication for public pages
 - Rate limiting for modifications
 
-See [SECURITY.md](SECURITY.md) for detailed security documentation.
-
 ## Credits
 
 Built following WordPress coding standards and best practices.
