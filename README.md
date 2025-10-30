@@ -184,3 +184,10 @@ This plugin follows WordPress security best practices including:
 ## Credits
 
 Built following WordPress coding standards and best practices.
+
+### Third-Party Libraries
+
+- **wp-color-picker-alpha**: Alpha channel support for WordPress Color Picker
+  - Source: https://github.com/kallookoo/wp-color-picker-alpha
+  - License: GPL-2.0
+  - Used for RGBA color selection in admin settings
