@@ -296,6 +296,16 @@ class Autoloader
             $is_on_management_page = is_page($management_page_id);
         }
 
+        // Block direct access to the management page without a valid token
+        if ($is_on_management_page && ! $has_token) {
+            status_header(403);
+            wp_die(
+                esc_html__('This appointment management page can only be accessed via a secure link.', 'gform-booking'),
+                esc_html__('Access denied', 'gform-booking'),
+                array('response' => 403)
+            );
+        }
+
         // If neither old URL nor on management page with token, return early
         if (! $is_old_url && (! $is_on_management_page || ! $has_token)) {
             return;
