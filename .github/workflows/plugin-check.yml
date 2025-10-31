@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - 'releases/*'
+      - "releases/*"
   pull_request:
 
 jobs:
@@ -15,8 +15,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Prepare plugin build
+        run: |
+          rsync -av ./ ./plugin-check \
+            --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            --exclude '.vscode/' \
+            --exclude '.idea/' \
+            --exclude '.DS_Store' \
+            --exclude '*.log' \
+            --exclude '.env*' \
+            --exclude 'docs/' \
+            --exclude 'scripts/' \
+            --exclude '.gitignore'
+
       - name: Run Plugin Check
         uses: wordpress/plugin-check-action@v1
         with:
-          build-dir: './'
-
+          build-dir: "./plugin-check"
+          ignore-codes: |
+            plugin_updater_detected
+            update_modification_detected

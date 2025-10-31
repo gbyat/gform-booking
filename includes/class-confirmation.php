@@ -68,7 +68,6 @@ class Confirmation
             // Swallow attachment errors; email can still be sent without attachment
         }
 
-        error_log('GF Booking: Sending confirmation email to: ' . $to);
         $sent = wp_mail($to, $subject, $message, $headers, $attachments);
 
         // Cleanup temp attachment files
@@ -79,7 +78,6 @@ class Confirmation
                 }
             }
         }
-        error_log('GF Booking: Email sent: ' . ($sent ? 'yes' : 'no'));
 
         // Also notify the assigned user/service admin.
         $this->send_admin_notification($appointment);
@@ -156,7 +154,6 @@ class Confirmation
         } catch (\Throwable $e) {
         }
 
-        error_log('GF Booking: Sending admin notification to: ' . $to);
         $sent = wp_mail($to, $subject, $message, $headers, $attachments);
 
         if (!empty($attachments)) {
@@ -166,7 +163,12 @@ class Confirmation
                 }
             }
         }
-        error_log('GF Booking: Admin notification sent: ' . ($sent ? 'yes' : 'no'));
+
+        if ($sent) {
+            do_action('gf_booking/admin_notification_sent', $appointment->get_id());
+        }
+
+        return $sent;
     }
 
     /**

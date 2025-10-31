@@ -8,15 +8,21 @@
 
 namespace GFormBooking;
 
+use \GFAddOn as GravityForms_AddOn;
+
 // Exit if accessed directly.
 if (! defined('ABSPATH')) {
     exit;
 }
 
+if (! class_exists('GFAddOn')) {
+    return;
+}
+
 /**
  * Class GF_Addon
  */
-class GF_Addon extends \GFAddOn
+class GF_Addon extends GravityForms_AddOn
 {
 
     /**
@@ -107,6 +113,16 @@ class GF_Addon extends \GFAddOn
 
         // Process booking when form is submitted.
         add_action('gform_entry_created', array($this, 'create_booking_from_entry'), 10, 2);
+    }
+
+    /**
+     * Retrieve plugin settings.
+     *
+     * @return array
+     */
+    public function get_plugin_settings()
+    {
+        return parent::get_plugin_settings();
     }
 
     /**
@@ -316,7 +332,6 @@ class GF_Addon extends \GFAddOn
                 // Format: Single slot: "YYYY-MM-DDTHH:MM:SS" (e.g., "2024-12-15T14:00:00")
                 //         Multiple slots: "YYYY-MM-DDTHH:MM:SS,YYYY-MM-DDTHH:MM:SS,..."
                 $field_value = rgar($entry, $field_id);
-                error_log('GF Booking: Field value from entry: ' . $field_value);
 
                 if (!empty($field_value)) {
                     // Check if multiple slots are selected (comma-separated).
@@ -440,8 +455,6 @@ class GF_Addon extends \GFAddOn
                                 }
                             }
                         }
-
-                        error_log('GF Booking: Date: ' . $appointment_date . ', Start time: ' . $start_time . ', End time: ' . $end_time);
                     }
                 }
                 break;
@@ -450,7 +463,6 @@ class GF_Addon extends \GFAddOn
 
         // If no calendar field found or no date/time selected, skip booking creation.
         if (!$calendar_field || empty($appointment_date) || empty($start_time)) {
-            error_log('GF Booking: No calendar field or date/time found. Entry ID: ' . $entry['id']);
             return;
         }
 
@@ -515,9 +527,6 @@ class GF_Addon extends \GFAddOn
             $name = $email ?: __('Customer', 'gform-booking');
         }
 
-        // Log booking attempt.
-        error_log('GF Booking: Attempting to create appointment. Date: ' . $appointment_date . ', Time: ' . $start_time . ', Service: ' . $selected_service_id);
-
         // Create appointment from entry.
         $appointment_id = Appointment::create(
             array(
@@ -538,10 +547,9 @@ class GF_Addon extends \GFAddOn
             )
         );
 
+        // Optional: trigger action hooks for logging extensions.
         if ($appointment_id) {
-            error_log('GF Booking: Appointment created successfully. ID: ' . $appointment_id);
-        } else {
-            error_log('GF Booking: Failed to create appointment.');
+            do_action('gf_booking/appointment_created', $appointment_id, $entry, $form);
         }
     }
 
@@ -556,7 +564,11 @@ class GF_Addon extends \GFAddOn
     {
         if (!$service || !$service->exists()) {
             // Fallback: 30 minutes.
-            return date('H:i:s', strtotime($start_time) + (30 * 60));
+            $base = strtotime($start_time . ' UTC');
+            if ($base === false) {
+                $base = strtotime($start_time);
+            }
+            return gmdate('H:i:s', $base + (30 * 60));
         }
 
         $settings = $service->get('settings');
@@ -581,17 +593,23 @@ class GF_Addon extends \GFAddOn
             // Fallback if slot not found.
             if (empty($end_time)) {
                 $slot_duration = $service->get('slot_duration') ?: 30;
-                $start_timestamp = strtotime($start_time);
+                $start_timestamp = strtotime($start_time . ' UTC');
+                if (false === $start_timestamp) {
+                    $start_timestamp = strtotime($start_time);
+                }
                 $end_timestamp = $start_timestamp + ($slot_duration * 60);
-                $end_time = date('H:i:s', $end_timestamp);
+                $end_time = gmdate('H:i:s', $end_timestamp);
             }
             return $end_time;
         } else {
             // Fixed duration slots.
             $slot_duration = $service->get('slot_duration') ?: 30;
-            $start_timestamp = strtotime($start_time);
+            $start_timestamp = strtotime($start_time . ' UTC');
+            if (false === $start_timestamp) {
+                $start_timestamp = strtotime($start_time);
+            }
             $end_timestamp = $start_timestamp + ($slot_duration * 60);
-            return date('H:i:s', $end_timestamp);
+            return gmdate('H:i:s', $end_timestamp);
         }
     }
 

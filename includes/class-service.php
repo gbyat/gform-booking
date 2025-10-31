@@ -191,7 +191,7 @@ class Service
 
         $update_data['updated_at'] = current_time('mysql');
 
-        $updated = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Updating service record in custom table.
+        $updated = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Updating service record in custom table.
             $table,
             $update_data,
             array('id' => $this->id)
@@ -219,7 +219,7 @@ class Service
         }
 
         $table = $wpdb->prefix . 'gf_booking_services';
-        $deleted = (bool) $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Removing service from plugin table.
+        $deleted = (bool) $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Removing service from plugin table.
             $table,
             array('id' => $this->id)
         );

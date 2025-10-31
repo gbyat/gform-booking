@@ -185,7 +185,8 @@ class Calendar
         if ($slot_type === 'custom') {
             return true;
         }
-        $day_of_week = date('N', strtotime($date)); // 1-7 (Monday-Sunday).
+        $timestamp   = strtotime($date . ' UTC');
+        $day_of_week = (int) gmdate('N', $timestamp); // 1-7 (Monday-Sunday).
 
         // First check if we have daily time windows configured.
         $daily_windows = isset($settings['daily_time_windows']) ? $settings['daily_time_windows'] : null;
@@ -256,7 +257,8 @@ class Calendar
 
         // If date is provided and we have daily windows, use them.
         if ($date && is_array($daily_windows)) {
-            $day_of_week = date('N', strtotime($date)); // 1-7
+            $timestamp   = strtotime($date . ' UTC');
+            $day_of_week = (int) gmdate('N', $timestamp); // 1-7
             $day_config = isset($daily_windows[$day_of_week]) ? $daily_windows[$day_of_week] : null;
 
             if ($day_config && (!isset($day_config['closed']) || !$day_config['closed'])) {
@@ -311,8 +313,8 @@ class Calendar
 
         // Adjust lunch break timestamps if needed.
         if ($has_lunch_break && $lunch_break_start && $lunch_break_end) {
-            $lunch_break_start = mktime(date('G', $lunch_break_start), date('i', $lunch_break_start), date('s', $lunch_break_start), 1, 1, 1970);
-            $lunch_break_end = mktime(date('G', $lunch_break_end), date('i', $lunch_break_end), date('s', $lunch_break_end), 1, 1, 1970);
+            $lunch_break_start = mktime((int) gmdate('G', $lunch_break_start), (int) gmdate('i', $lunch_break_start), (int) gmdate('s', $lunch_break_start), 1, 1, 1970);
+            $lunch_break_end   = mktime((int) gmdate('G', $lunch_break_end), (int) gmdate('i', $lunch_break_end), (int) gmdate('s', $lunch_break_end), 1, 1, 1970);
         }
 
         $duration_seconds = $slot_duration * 60;
@@ -335,8 +337,8 @@ class Calendar
 
             if ($slot_end <= $end) {
                 $slots[] = array(
-                    'start' => date('H:i:s', $start),
-                    'end'   => date('H:i:s', $slot_end),
+                    'start' => gmdate('H:i:s', $start),
+                    'end'   => gmdate('H:i:s', $slot_end),
                 );
             }
 
@@ -393,8 +395,8 @@ class Calendar
 
             if ($slot_end <= $end) {
                 $slots[] = array(
-                    'start' => date('H:i:s', $start),
-                    'end'   => date('H:i:s', $slot_end),
+                    'start' => gmdate('H:i:s', $start),
+                    'end'   => gmdate('H:i:s', $slot_end),
                 );
             }
 
@@ -425,7 +427,7 @@ class Calendar
             return array();
         }
 
-        $day_of_week = date('N', strtotime($date)); // 1-7
+        $day_of_week = (int) gmdate('N', strtotime($date . ' UTC')); // 1-7
         $available_slots = array();
 
         // Get all booked appointments for this date first.
@@ -523,7 +525,7 @@ class Calendar
             $count = wp_cache_get($cache_key, 'gf_booking');
 
             if (false === $count) {
-                $count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Calculating booked capacity from custom appointments table.
+                $count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Calculating booked capacity from custom appointments table.
                     $wpdb->prepare(
                         "SELECT COALESCE(SUM(participants), 0) FROM $table 
 				WHERE service_id = %d 
@@ -556,7 +558,7 @@ class Calendar
         $booked = wp_cache_get($cache_key, 'gf_booking');
 
         if (false === $booked) {
-            $booked = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fetching appointment overlaps for availability calculation.
+            $booked = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Fetching appointment overlaps for availability calculation.
                 $wpdb->prepare(
                     "SELECT start_time, end_time, participants FROM $table 
 			WHERE service_id = %d 
@@ -575,12 +577,6 @@ class Calendar
 
             $ttl = defined('MINUTE_IN_SECONDS') ? constant('MINUTE_IN_SECONDS') : 60;
             wp_cache_set($cache_key, $booked, 'gf_booking', $ttl);
-        }
-
-        // Debug logging
-        error_log('GF Booking: get_booked_slots for date ' . $date . ', service_id ' . $this->service_id . ', found ' . count($booked) . ' booked slots');
-        if (!empty($booked)) {
-            error_log('GF Booking: Booked slots: ' . json_encode($booked));
         }
 
         return $booked;
@@ -603,8 +599,6 @@ class Calendar
         $booked_count = $this->get_booked_slots($date, $slot['start'], $slot['end']);
         $remaining = $max_participants - $booked_count;
 
-        error_log('GF Booking: Time slot ' . $slot['start'] . '-' . $slot['end'] . ' - already booked: ' . $booked_count . ', max: ' . $max_participants . ', remaining: ' . $remaining);
-
         return $remaining > 0 ? $remaining : null;
     }
 
@@ -617,17 +611,21 @@ class Calendar
      */
     public function get_month_calendar($year = null, $month = null)
     {
-        if (is_null($year)) {
-            $year = date('Y');
-        }
-        if (is_null($month)) {
-            $month = date('m');
+        if (is_null($year) || is_null($month)) {
+            $now = current_time('timestamp');
+            $timezone = wp_timezone();
+            if (is_null($year)) {
+                $year = (int) wp_date('Y', $now, $timezone);
+            }
+            if (is_null($month)) {
+                $month = (int) wp_date('m', $now, $timezone);
+            }
         }
 
         $calendar = array();
         $first_day = mktime(0, 0, 0, $month, 1, $year);
-        $days_in_month = date('t', $first_day);
-        $day_of_week = date('w', $first_day); // 0 = Sunday.
+        $days_in_month = (int) gmdate('t', $first_day);
+        $day_of_week   = (int) gmdate('w', $first_day); // 0 = Sunday.
 
         // Adjust day of week to match WordPress (Monday = 1).
         $day_of_week = ($day_of_week === 0) ? 6 : $day_of_week - 1;
@@ -641,7 +639,7 @@ class Calendar
             if ($i < $day_of_week) {
                 $calendar[$week][$i] = null;
             } elseif ($current_day <= $days_in_month) {
-                $date = sprintf('%d-%02d-%02d', $year, $month, $current_day);
+                $date = sprintf('%04d-%02d-%02d', $year, $month, $current_day);
                 $calendar[$week][$i] = array(
                     'date'   => $date,
                     'day'    => $current_day,
@@ -658,7 +656,7 @@ class Calendar
         while ($current_day <= $days_in_month) {
             for ($i = 0; $i < 7; $i++) {
                 if ($current_day <= $days_in_month) {
-                    $date = sprintf('%d-%02d-%02d', $year, $month, $current_day);
+                    $date = sprintf('%04d-%02d-%02d', $year, $month, $current_day);
                     $calendar[$week][$i] = array(
                         'date'   => $date,
                         'day'    => $current_day,

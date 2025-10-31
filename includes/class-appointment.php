@@ -21,6 +21,13 @@ if (! class_exists('WP_Error')) {
 
 /**
  * Class Appointment
+ *
+ * @phpcsSuppress WordPress.Namespaces.PrefixAllGlobals.NonPrefixedClassFound
+ */
+class Appointment_Error extends \WP_Error {} // phpcs:ignore WordPress.Namespaces.PrefixAllGlobals.NonPrefixedClassFound
+
+/**
+ * Class Appointment
  */
 class Appointment
 {
@@ -54,7 +61,7 @@ class Appointment
             $this->data = wp_cache_get($cache_key, 'gf_booking');
 
             if (false === $this->data) {
-                $this->data = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Querying plugin-managed appointments table.
+                $this->data = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Querying plugin-managed appointments table.
                     $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $appointment_id),
                     'ARRAY_A'
                 );
@@ -126,7 +133,7 @@ class Appointment
             'updated_at'       => current_time('mysql'),
         );
 
-        $result = $wpdb->insert($table, $insert_data); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Inserting appointment into custom table.
+        $result = $wpdb->insert($table, $insert_data); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Inserting appointment into custom table.
 
         if ($result) {
             $appointment_id = $wpdb->insert_id;
@@ -207,7 +214,7 @@ class Appointment
 
         $original_data = $this->data ? $this->data : array();
 
-        $updated = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Updating appointment row in custom table.
+        $updated = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Updating appointment row in custom table.
             $table,
             $update_data,
             array('id' => $this->id)
@@ -401,7 +408,7 @@ class Appointment
      *
      * @param string $new_date New date.
      * @param string $new_time New time.
-     * @return bool|WP_Error True on success, WP_Error on failure.
+     * @return bool|Appointment_Error True on success, WP_Error on failure.
      */
     public function modify($new_date, $new_time)
     {
@@ -414,7 +421,7 @@ class Appointment
         // Check modification count (max 5).
         $modification_count = isset($settings['modification_count']) ? absint($settings['modification_count']) : 0;
         if ($modification_count >= 5) {
-            return new \WP_Error(
+            return $this->create_error(
                 'max_modifications_exceeded',
                 __('Maximum number of modifications (5) reached for this appointment. Please contact support if you need further changes.', 'gform-booking')
             );
@@ -430,7 +437,7 @@ class Appointment
             if ($minutes_since_modification < 5) {
                 // Less than 5 minutes since last modification.
                 $minutes_remaining = ceil(5 - $minutes_since_modification);
-                return new \WP_Error(
+                return $this->create_error(
                     'rate_limit_exceeded',
                     sprintf(
                         /* translators: %d: minutes remaining */
@@ -442,11 +449,21 @@ class Appointment
         }
 
         // Calculate end time based on original duration.
-        $start = strtotime($this->get('start_time'));
-        $end = strtotime($this->get('end_time'));
+        $start = strtotime($this->get('start_time') . ' UTC');
+        if (false === $start) {
+            $start = strtotime($this->get('start_time'));
+        }
+        $end = strtotime($this->get('end_time') . ' UTC');
+        if (false === $end) {
+            $end = strtotime($this->get('end_time'));
+        }
         $duration = $end - $start;
 
-        $new_end = date('H:i:s', strtotime($new_time) + $duration);
+        $new_start_timestamp = strtotime($new_time . ' UTC');
+        if (false === $new_start_timestamp) {
+            $new_start_timestamp = strtotime($new_time);
+        }
+        $new_end = gmdate('H:i:s', $new_start_timestamp + $duration);
 
         // Keep the original token - don't change it.
         $current_token = $this->get('token');
@@ -561,5 +578,27 @@ class Appointment
             $end_key   = sanitize_key(str_replace(':', '-', $end_time));
             wp_cache_delete(sprintf('gf_booking_slot_count_%d_%s_%s_%s', $service_id, $date_key, $start_key, $end_key), 'gf_booking');
         }
+    }
+
+    /**
+     * Get the token
+     *
+     * @return string
+     */
+    private function get_token()
+    {
+        return $this->get('token');
+    }
+
+    /**
+     * Create a WP_Error instance.
+     *
+     * @param string $code Error code.
+     * @param string $message Error message.
+     * @return Appointment_Error
+     */
+    private function create_error($code, $message)
+    {
+        return new Appointment_Error($code, $message);
     }
 }

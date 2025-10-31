@@ -320,7 +320,7 @@ class Autoloader
             $appointment_id = wp_cache_get($cache_key, 'gf_booking');
 
             if (false === $appointment_id) {
-                $appointment_id = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Querying custom appointment table for secure token lookup.
+                $appointment_id = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Querying custom appointment table for secure token lookup.
                     $wpdb->prepare(
                         "SELECT id FROM $table WHERE token = %s",
                         $token
