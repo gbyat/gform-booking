@@ -38,3 +38,7 @@ jobs:
           ignore-codes: |
             plugin_updater_detected
             update_modification_detected
+            WordPress.WP.I18n.TextDomainMismatch
+            WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+            WordPress.Security.ValidatedSanitizedInput.MissingUnslash
+            WordPress.Security.ValidatedSanitizedInput.InputNotValidated

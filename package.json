@@ -1,6 +1,6 @@
 {
   "name": "gform-booking",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "WordPress booking plugin for Gravity Forms",
   "scripts": {
     "pot": "node scripts/generate-pot.js",
