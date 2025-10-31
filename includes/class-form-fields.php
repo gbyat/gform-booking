@@ -148,7 +148,10 @@ class Form_Fields
                                             data-slots="<?php echo esc_attr(json_encode($day['slots'])); ?>">
                                             <div class="gf-booking-day-number"><?php echo esc_html($day['day']); ?></div>
                                             <div class="gf-booking-slots-count">
-                                                <?php printf(esc_html(_n('%d slot', '%d slots', $slots_count, 'gform-booking')), $slots_count); ?>
+                                                <?php
+                                                /* translators: %d: Number of available slots. */
+                                                printf(esc_html(_n('%d slot', '%d slots', $slots_count, 'gform-booking')), absint($slots_count));
+                                                ?>
                                             </div>
                                         </td>
                                     <?php else: ?>

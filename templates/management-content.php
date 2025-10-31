@@ -1,5 +1,7 @@
 <?php
 
+use GFormBooking\Form_Fields;
+
 /**
  * Template for appointment management content
  * This file is included when rendering the management page
@@ -65,7 +67,9 @@
                     ),
                 ));
 
-                echo \GFormBooking\Form_Fields::render_calendar_field('', $appointment->get('service_id'));
+                $service_id = $appointment ? absint($appointment->get('service_id')) : 0;
+                $calendar_markup = Form_Fields::render_calendar_field('', $service_id);
+                echo wp_kses_post($calendar_markup); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Safe HTML produced by Form_Fields
                 ?>
 
                 <form method="post" id="gf-booking-modify-form" style="display: none; margin-top: 20px;">

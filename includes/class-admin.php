@@ -130,12 +130,23 @@ class Admin
                     global $wpdb;
                     $table = $wpdb->prefix . 'gf_booking_appointments';
                     $today = current_time('Y-m-d');
-                    $upcoming_count = $wpdb->get_var(
-                        $wpdb->prepare(
-                            "SELECT COUNT(*) FROM $table WHERE appointment_date >= %s AND status = 'confirmed'",
-                            $today
-                        )
-                    );
+                    $cache_key = 'gf_booking_stats_upcoming';
+                    $upcoming_count = wp_cache_get($cache_key, 'gf_booking');
+
+                    if (false === $upcoming_count) {
+                        $upcoming_count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Dashboard stat querying custom appointments table.
+                            $wpdb->prepare(
+                                "SELECT COUNT(*) FROM $table WHERE appointment_date >= %s AND status = 'confirmed'",
+                                $today
+                            )
+                        );
+
+                        if (null === $upcoming_count) {
+                            $upcoming_count = 0;
+                        }
+
+                        wp_cache_set($cache_key, (int) $upcoming_count, 'gf_booking', 5 * 60);
+                    }
                     ?>
                     <div class="stat-box">
                         <h3><?php echo esc_html($services_count); ?></h3>
@@ -485,10 +496,10 @@ class Admin
                                                         );
                                                         $slot_weekdays = isset($slot['weekdays']) && is_array($slot['weekdays']) ? $slot['weekdays'] : array();
                                                         foreach ($weekday_names as $day_num => $day_letter) :
-                                                            $checked = in_array($day_num, $slot_weekdays) ? 'checked' : '';
+                                                            $is_checked = in_array($day_num, $slot_weekdays, true);
                                                         ?>
                                                             <label class="weekday-checkbox">
-                                                                <input type="checkbox" name="custom_slot_weekdays_<?php echo esc_attr($index); ?>[]" value="<?php echo esc_attr($day_num); ?>" <?php echo $checked; ?>>
+                                                                <input type="checkbox" name="custom_slot_weekdays_<?php echo esc_attr($index); ?>[]" value="<?php echo esc_attr($day_num); ?>" <?php checked($is_checked); ?>>
                                                                 <span><?php echo esc_html($day_letter); ?></span>
                                                             </label>
                                                         <?php endforeach; ?>
@@ -530,7 +541,10 @@ class Admin
                             $currency = self::get_currency();
                             ?>
                             <input type="text" id="slot_price" name="slot_price" value="<?php echo esc_attr($slot_price); ?>" pattern="[0-9]+([.,][0-9]{1,2})?" placeholder="<?php echo esc_attr('0.00'); ?>" class="small-text">
-                            <p class="description"><?php echo esc_html(sprintf(__('Price per slot (currency: %s). Enter numbers only, e.g., 450.00. Leave empty for free slots.', 'gform-booking'), $currency)); ?></p>
+                            <p class="description"><?php
+                                                    /* translators: %s: Currency code. */
+                                                    echo esc_html(sprintf(__('Price per slot (currency: %s). Enter numbers only, e.g., 450.00. Leave empty for free slots.', 'gform-booking'), $currency));
+                                                    ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -682,7 +696,14 @@ class Admin
 
                     // Add to list.
                     var dateObj = new Date(date + 'T00:00:00');
-                    var locale = '<?php echo strtok(get_locale(), '_'); ?>'; // Get only language code (e.g., 'de' from 'de_DE_formal')
+                    <?php
+                    $gf_booking_locale_parts = explode('_', get_locale());
+                    $gf_booking_locale_lang = '';
+                    if (!empty($gf_booking_locale_parts)) {
+                        $gf_booking_locale_lang = strtolower(sanitize_key($gf_booking_locale_parts[0]));
+                    }
+                    ?>
+                    var locale = '<?php echo esc_js($gf_booking_locale_lang); ?>'; // Get only language code (e.g., 'de' from 'de_DE_formal')
                     var formattedDate = dateObj.toLocaleDateString(locale, {
                         year: 'numeric',
                         month: 'long',
@@ -925,13 +946,13 @@ class Admin
         if (isset($_GET['export'])) {
             // Verify nonce
             if (! isset($_GET['_wpnonce']) || ! wp_verify_nonce($_GET['_wpnonce'], 'export_appointments')) {
-                wp_die(__('Security check failed.', 'gform-booking'));
+                wp_die(esc_html__('Security check failed.', 'gform-booking'));
             }
 
             $format = sanitize_text_field($_GET['export']);
 
             // Execute query (table name is safe as it uses $wpdb->prefix)
-            $rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY appointment_date ASC, start_time ASC", ARRAY_A);
+            $rows = $wpdb->get_results("SELECT * FROM {$table} ORDER BY appointment_date ASC, start_time ASC", 'ARRAY_A'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Exporting plugin appointment data.
             if ($format === 'json') {
                 nocache_headers();
                 header('Content-Type: application/json; charset=utf-8');
@@ -968,7 +989,7 @@ class Admin
 
         $query .= "ORDER BY a.created_at DESC, a.appointment_date ASC, a.start_time ASC LIMIT 100";
 
-        $all_appointments = $wpdb->get_results($query, ARRAY_A);
+        $all_appointments = $wpdb->get_results($query, 'ARRAY_A'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Listing appointments from custom table with optional filters.
 
         // Filter and mark past appointments in PHP.
         $today = current_time('Y-m-d');
@@ -1086,7 +1107,7 @@ class Admin
 
         // Check user capabilities
         if (! current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'gform-booking'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'gform-booking'));
         }
 
         // Handle appointment cancellation.
@@ -1109,7 +1130,7 @@ class Admin
             global $wpdb;
             $table = $wpdb->prefix . 'gf_booking_appointments';
             $appointment_id = absint($_GET['appointment_id']);
-            $wpdb->delete($table, array('id' => $appointment_id), array('%d'));
+            $wpdb->delete($table, array('id' => $appointment_id), array('%d')); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Removing appointment from custom table per admin action.
             add_action('admin_notices', function () {
                 echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Appointment deleted successfully.', 'gform-booking') . '</p></div>';
             });
@@ -1491,7 +1512,10 @@ class Admin
                             <p class="description">
                                 <?php esc_html_e('The currency code used for pricing (e.g., EUR, USD, GBP).', 'gform-booking'); ?>
                                 <?php if ($gf_currency !== 'N/A'): ?>
-                                    <br><?php printf(esc_html__('Note: Gravity Forms currency is set to %s.', 'gform-booking'), '<strong>' . esc_html($gf_currency) . '</strong>'); ?>
+                                    <br><?php
+                                        /* translators: %s: Gravity Forms currency code. */
+                                        printf(esc_html__('Note: Gravity Forms currency is set to %s.', 'gform-booking'), '<strong>' . esc_html($gf_currency) . '</strong>');
+                                        ?>
                                 <?php endif; ?>
                             </p>
                         </td>
@@ -1683,6 +1707,15 @@ class Admin
             </form>
         </div>
 
+        <?php
+        $locale_lang = '';
+        $locale_raw = get_locale();
+        if (!empty($locale_raw)) {
+            $locale_parts = explode('_', $locale_raw);
+            $locale_first = isset($locale_parts[0]) ? $locale_parts[0] : $locale_raw;
+            $locale_lang = strtolower(sanitize_key($locale_first));
+        }
+        ?>
         <script type="text/javascript">
             jQuery(document).ready(function($) {
                 // Use theme palette if available, otherwise use WordPress default

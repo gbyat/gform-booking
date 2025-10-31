@@ -512,37 +512,70 @@ class Calendar
 
         // If checking for a specific slot, sum up participants from overlapping bookings.
         if ($slot_start && $slot_end) {
-            $count = $wpdb->get_var(
-                $wpdb->prepare(
-                    "SELECT COALESCE(SUM(participants), 0) FROM $table 
-					WHERE service_id = %d 
-					AND appointment_date = %s 
-					AND (status = 'confirmed' OR status = 'changed')
-					AND start_time < %s 
-					AND end_time > %s",
-                    $this->service_id,
-                    $date,
-                    $slot_end,
-                    $slot_start
-                )
+            $cache_key = sprintf(
+                'gf_booking_slot_count_%d_%s_%s_%s',
+                absint($this->service_id),
+                sanitize_key($date),
+                sanitize_key(str_replace(':', '-', $slot_start)),
+                sanitize_key(str_replace(':', '-', $slot_end))
             );
+
+            $count = wp_cache_get($cache_key, 'gf_booking');
+
+            if (false === $count) {
+                $count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Calculating booked capacity from custom appointments table.
+                    $wpdb->prepare(
+                        "SELECT COALESCE(SUM(participants), 0) FROM $table 
+				WHERE service_id = %d 
+				AND appointment_date = %s 
+				AND (status = 'confirmed' OR status = 'changed')
+				AND start_time < %s 
+				AND end_time > %s",
+                        $this->service_id,
+                        $date,
+                        $slot_end,
+                        $slot_start
+                    )
+                );
+
+                $count = $count ? absint($count) : 0;
+                $ttl   = defined('MINUTE_IN_SECONDS') ? constant('MINUTE_IN_SECONDS') : 60;
+                wp_cache_set($cache_key, $count, 'gf_booking', $ttl);
+            }
 
             return absint($count);
         }
 
         // Otherwise, return all bookings for the date.
-        $booked = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT start_time, end_time, participants FROM $table 
-				WHERE service_id = %d 
-				AND appointment_date = %s 
-				AND (status = 'confirmed' OR status = 'changed')
-				ORDER BY start_time ASC",
-                $this->service_id,
-                $date
-            ),
-            ARRAY_A
+        $cache_key = sprintf(
+            'gf_booking_booked_slots_%d_%s',
+            absint($this->service_id),
+            sanitize_key($date)
         );
+
+        $booked = wp_cache_get($cache_key, 'gf_booking');
+
+        if (false === $booked) {
+            $booked = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Fetching appointment overlaps for availability calculation.
+                $wpdb->prepare(
+                    "SELECT start_time, end_time, participants FROM $table 
+			WHERE service_id = %d 
+			AND appointment_date = %s 
+			AND (status = 'confirmed' OR status = 'changed')
+			ORDER BY start_time ASC",
+                    $this->service_id,
+                    $date
+                ),
+                'ARRAY_A'
+            );
+
+            if (!is_array($booked)) {
+                $booked = array();
+            }
+
+            $ttl = defined('MINUTE_IN_SECONDS') ? constant('MINUTE_IN_SECONDS') : 60;
+            wp_cache_set($cache_key, $booked, 'gf_booking', $ttl);
+        }
 
         // Debug logging
         error_log('GF Booking: get_booked_slots for date ' . $date . ', service_id ' . $this->service_id . ', found ' . count($booked) . ' booked slots');

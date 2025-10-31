@@ -44,7 +44,16 @@ class Service
 
         if ($service_id > 0) {
             $table = $wpdb->prefix . 'gf_booking_services';
-            $this->data = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $service_id), ARRAY_A);
+            $cache_key = 'gf_booking_service_' . absint($service_id);
+            $this->data = wp_cache_get($cache_key, 'gf_booking');
+
+            if (false === $this->data) {
+                $this->data = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $service_id), 'ARRAY_A'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Querying plugin-managed services table.
+
+                if ($this->data) {
+                    wp_cache_set($cache_key, $this->data, 'gf_booking', 5 * 60);
+                }
+            }
 
             if ($this->data) {
                 $this->id = $service_id;
@@ -76,7 +85,15 @@ class Service
         global $wpdb;
         $table = $wpdb->prefix . 'gf_booking_services';
         // Safe: table name uses $wpdb->prefix, no user input
-        return $wpdb->get_results("SELECT * FROM {$table} ORDER BY name ASC", ARRAY_A);
+        $cache_key = 'gf_booking_services_all';
+        $services = wp_cache_get($cache_key, 'gf_booking');
+
+        if (false === $services) {
+            $services = $wpdb->get_results("SELECT * FROM {$table} ORDER BY name ASC", 'ARRAY_A'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Listing services from custom plugin table.
+            wp_cache_set($cache_key, $services, 'gf_booking', 5 * 60);
+        }
+
+        return $services;
     }
 
     /**
@@ -116,7 +133,11 @@ class Service
             'updated_at'    => current_time('mysql'),
         );
 
-        $result = $wpdb->insert($table, $insert_data);
+        $result = $wpdb->insert($table, $insert_data); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Writing service record to custom table.
+
+        if ($result) {
+            wp_cache_delete('gf_booking_services_all', 'gf_booking');
+        }
 
         if ($result) {
             return $wpdb->insert_id;
@@ -170,11 +191,18 @@ class Service
 
         $update_data['updated_at'] = current_time('mysql');
 
-        return $wpdb->update(
+        $updated = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Updating service record in custom table.
             $table,
             $update_data,
             array('id' => $this->id)
         );
+
+        if ($updated) {
+            wp_cache_delete('gf_booking_service_' . $this->id, 'gf_booking');
+            wp_cache_delete('gf_booking_services_all', 'gf_booking');
+        }
+
+        return $updated;
     }
 
     /**
@@ -191,7 +219,17 @@ class Service
         }
 
         $table = $wpdb->prefix . 'gf_booking_services';
-        return (bool) $wpdb->delete($table, array('id' => $this->id));
+        $deleted = (bool) $wpdb->delete( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Removing service from plugin table.
+            $table,
+            array('id' => $this->id)
+        );
+
+        if ($deleted) {
+            wp_cache_delete('gf_booking_service_' . $this->id, 'gf_booking');
+            wp_cache_delete('gf_booking_services_all', 'gf_booking');
+        }
+
+        return $deleted;
     }
 
     /**

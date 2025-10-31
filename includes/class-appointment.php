@@ -13,6 +13,12 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
+if (! class_exists('WP_Error')) {
+    $abs_path = defined('ABSPATH') ? constant('ABSPATH') : dirname(__FILE__, 4) . '/';
+    $wpinc    = defined('WPINC') ? constant('WPINC') : 'wp-includes';
+    require_once $abs_path . $wpinc . '/class-wp-error.php';
+}
+
 /**
  * Class Appointment
  */
@@ -43,12 +49,26 @@ class Appointment
         global $wpdb;
 
         if ($appointment_id > 0) {
-            $table = $wpdb->prefix . 'gf_booking_appointments';
-            $this->data = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $appointment_id), ARRAY_A);
+            $table     = $wpdb->prefix . 'gf_booking_appointments';
+            $cache_key = 'gf_booking_appointment_' . absint($appointment_id);
+            $this->data = wp_cache_get($cache_key, 'gf_booking');
+
+            if (false === $this->data) {
+                $this->data = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Querying plugin-managed appointments table.
+                    $wpdb->prepare("SELECT * FROM $table WHERE id = %d", $appointment_id),
+                    'ARRAY_A'
+                );
+
+                if ($this->data) {
+                    $minute_constant = defined('MINUTE_IN_SECONDS') ? constant('MINUTE_IN_SECONDS') : 60;
+                    $cache_ttl = $minute_constant * 5;
+                    wp_cache_set($cache_key, $this->data, 'gf_booking', $cache_ttl);
+                }
+            }
 
             if ($this->data) {
                 $this->id = $appointment_id;
-                if (! empty($this->data['settings'])) {
+                if (! empty($this->data['settings']) && is_string($this->data['settings'])) {
                     $this->data['settings'] = json_decode($this->data['settings'], true);
                 }
             }
@@ -106,13 +126,27 @@ class Appointment
             'updated_at'       => current_time('mysql'),
         );
 
-        $result = $wpdb->insert($table, $insert_data);
+        $result = $wpdb->insert($table, $insert_data); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Inserting appointment into custom table.
 
         if ($result) {
             $appointment_id = $wpdb->insert_id;
 
             // Send confirmation email.
             self::send_confirmation_email($appointment_id, $token);
+
+            $cache_key   = 'gf_booking_appointment_' . absint($appointment_id);
+            $cached_row  = $insert_data;
+            $cached_row['id'] = $appointment_id;
+            $minute_constant = defined('MINUTE_IN_SECONDS') ? constant('MINUTE_IN_SECONDS') : 60;
+            $cache_ttl  = $minute_constant * 5;
+            wp_cache_set($cache_key, $cached_row, 'gf_booking', $cache_ttl);
+
+            self::clear_calendar_cache(
+                $insert_data['service_id'],
+                $insert_data['appointment_date'],
+                $insert_data['start_time'],
+                $insert_data['end_time']
+            );
 
             return $appointment_id;
         }
@@ -171,11 +205,39 @@ class Appointment
 
         $update_data['updated_at'] = current_time('mysql');
 
-        return $wpdb->update(
+        $original_data = $this->data ? $this->data : array();
+
+        $updated = $wpdb->update( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Updating appointment row in custom table.
             $table,
             $update_data,
             array('id' => $this->id)
         );
+
+        if ($updated) {
+            wp_cache_delete('gf_booking_appointment_' . absint($this->id), 'gf_booking');
+
+            $original_service = isset($original_data['service_id']) ? absint($original_data['service_id']) : 0;
+            $original_date    = isset($original_data['appointment_date']) ? $original_data['appointment_date'] : '';
+            $original_start   = isset($original_data['start_time']) ? $original_data['start_time'] : '';
+            $original_end     = isset($original_data['end_time']) ? $original_data['end_time'] : '';
+
+            if ($original_service && $original_date) {
+                self::clear_calendar_cache($original_service, $original_date, $original_start, $original_end);
+            }
+
+            $new_service = isset($update_data['service_id']) ? absint($update_data['service_id']) : $original_service;
+            $new_date    = isset($update_data['appointment_date']) ? $update_data['appointment_date'] : $original_date;
+            $new_start   = isset($update_data['start_time']) ? $update_data['start_time'] : $original_start;
+            $new_end     = isset($update_data['end_time']) ? $update_data['end_time'] : $original_end;
+
+            if ($new_service && $new_date) {
+                self::clear_calendar_cache($new_service, $new_date, $new_start, $new_end);
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -473,5 +535,31 @@ class Appointment
 
         $confirmation = new Confirmation();
         $confirmation->send_appointment_confirmation($appointment, $token);
+    }
+
+    /**
+     * Clear cached calendar data impacted by appointment changes.
+     *
+     * @param int         $service_id Service ID.
+     * @param string|null $date       Appointment date (Y-m-d).
+     * @param string|null $start_time Start time (H:i:s).
+     * @param string|null $end_time   End time (H:i:s).
+     * @return void
+     */
+    private static function clear_calendar_cache($service_id, $date = null, $start_time = null, $end_time = null)
+    {
+        $service_id = absint($service_id);
+        if (! $service_id || empty($date)) {
+            return;
+        }
+
+        $date_key = sanitize_key($date);
+        wp_cache_delete(sprintf('gf_booking_booked_slots_%d_%s', $service_id, $date_key), 'gf_booking');
+
+        if (! empty($start_time) && ! empty($end_time)) {
+            $start_key = sanitize_key(str_replace(':', '-', $start_time));
+            $end_key   = sanitize_key(str_replace(':', '-', $end_time));
+            wp_cache_delete(sprintf('gf_booking_slot_count_%d_%s_%s_%s', $service_id, $date_key, $start_key, $end_key), 'gf_booking');
+        }
     }
 }

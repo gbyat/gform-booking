@@ -92,7 +92,8 @@ class Database
 			KEY status (status)
 		) $charset_collate;";
 
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        $wp_root = defined('ABSPATH') ? constant('ABSPATH') : dirname(__FILE__, 4) . '/';
+        require_once $wp_root . 'wp-admin/includes/upgrade.php';
         dbDelta($services_sql);
         dbDelta($appointments_sql);
 
@@ -108,18 +109,11 @@ class Database
         global $wpdb;
         $table = $wpdb->prefix . 'gf_booking_appointments';
 
-        // Check if participants column exists.
-        $column_exists = $wpdb->get_results(
-            $wpdb->prepare(
-                "SHOW COLUMNS FROM $table LIKE %s",
-                'participants'
-            )
+        maybe_add_column(
+            $table,
+            'participants',
+            "ALTER TABLE $table ADD COLUMN participants int(11) NOT NULL DEFAULT 1 AFTER end_time"
         );
-
-        if (empty($column_exists)) {
-            // Add participants column.
-            $wpdb->query("ALTER TABLE $table ADD COLUMN participants int(11) NOT NULL DEFAULT 1 AFTER end_time");
-        }
     }
 
     /**
@@ -130,7 +124,7 @@ class Database
         global $wpdb;
         $prefix = $wpdb->prefix . 'gf_booking_';
 
-        $wpdb->query("DROP TABLE IF EXISTS {$prefix}appointments");
-        $wpdb->query("DROP TABLE IF EXISTS {$prefix}services");
+        $wpdb->query("DROP TABLE IF EXISTS {$prefix}appointments"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Plugin removes its own custom tables on uninstall.
+        $wpdb->query("DROP TABLE IF EXISTS {$prefix}services"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.DirectDatabaseQuery.SchemaChange -- Plugin removes its own custom tables on uninstall.
     }
 }

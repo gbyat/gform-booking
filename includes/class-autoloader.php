@@ -309,20 +309,33 @@ class Autoloader
 
         if (! $token) {
             // No token provided - show error or redirect
-            wp_die(__('Invalid request. A valid appointment token is required.', 'gform-booking'));
+            wp_die(esc_html__('Invalid request. A valid appointment token is required.', 'gform-booking'));
         }
 
         // If no appointment ID in URL, we need to find it by token
         if (! $appointment_id) {
             global $wpdb;
             $table = $wpdb->prefix . 'gf_booking_appointments';
-            $appointment_id = $wpdb->get_var($wpdb->prepare(
-                "SELECT id FROM $table WHERE token = %s",
-                $token
-            ));
+            $cache_key = 'gf_booking_token_' . md5($token);
+            $appointment_id = wp_cache_get($cache_key, 'gf_booking');
+
+            if (false === $appointment_id) {
+                $appointment_id = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- Querying custom appointment table for secure token lookup.
+                    $wpdb->prepare(
+                        "SELECT id FROM $table WHERE token = %s",
+                        $token
+                    )
+                );
+
+                if ($appointment_id) {
+                    // Cache for five minutes to satisfy Plugin Check caching guidance without risking stale data.
+                    $cache_ttl = 5 * 60;
+                    wp_cache_set($cache_key, (int) $appointment_id, 'gf_booking', $cache_ttl);
+                }
+            }
 
             if (! $appointment_id) {
-                wp_die(__('Invalid or expired token.', 'gform-booking'));
+                wp_die(esc_html__('Invalid or expired token.', 'gform-booking'));
             }
         }
 
@@ -330,7 +343,7 @@ class Autoloader
         $appointment = new Appointment($appointment_id);
 
         if (! $appointment->exists() || ! $appointment->verify_token($token)) {
-            wp_die(__('Invalid or expired token.', 'gform-booking'));
+            wp_die(esc_html__('Invalid or expired token.', 'gform-booking'));
         }
 
         // Handle modification if requested.
@@ -343,6 +356,7 @@ class Autoloader
                 $now = current_time('timestamp');
                 $appt_ts = strtotime($appointment->get('appointment_date') . ' ' . $appointment->get('start_time'));
                 if ($appt_ts - ($cutoff_hours * 3600) <= $now) {
+                    /* translators: %d: Number of hours before the appointment. */
                     $error_message = sprintf(esc_html__('Modifications are not allowed within %d hours of the appointment.', 'gform-booking'), $cutoff_hours);
                 }
             }
@@ -378,6 +392,7 @@ class Autoloader
                 $now = current_time('timestamp');
                 $appt_ts = strtotime($appointment->get('appointment_date') . ' ' . $appointment->get('start_time'));
                 if ($appt_ts - ($cutoff_hours * 3600) <= $now) {
+                    /* translators: %d: Number of hours before the appointment. */
                     $error_message = sprintf(esc_html__('Cancellations are not allowed within %d hours of the appointment.', 'gform-booking'), $cutoff_hours);
                 }
             }
@@ -538,7 +553,7 @@ class Autoloader
                                     ),
                                 ));
 
-                                echo \GFormBooking\Form_Fields::render_calendar_field('', $appointment->get('service_id'));
+                                echo wp_kses_post(\GFormBooking\Form_Fields::render_calendar_field('', $appointment->get('service_id')));
                                 ?>
 
                                 <form method="post" id="gf-booking-modify-form" style="display: none; margin-top: 20px;">
@@ -629,14 +644,14 @@ class Autoloader
                 $appointment_id = isset($_GET['appointment']) ? absint($_GET['appointment']) : 0;
 
                 if (! $appointment_id) {
-                    wp_die(__('Invalid request.', 'gform-booking'));
+                    wp_die(esc_html__('Invalid request.', 'gform-booking'));
                 }
 
                 // Load appointment.
                 $appointment = new Appointment($appointment_id);
 
                 if (! $appointment->exists()) {
-                    wp_die(__('Appointment not found.', 'gform-booking'));
+                    wp_die(esc_html__('Appointment not found.', 'gform-booking'));
                 }
 
                 // Generate iCal content.
@@ -650,7 +665,7 @@ class Autoloader
                 header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
 
                 // Output iCal content.
-                echo $ical_content;
+                echo $ical_content; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Required raw ICS output.
                 exit;
             }
 

@@ -319,7 +319,7 @@ class Confirmation
                         printf(
                             /* translators: %s: Site name */
                             esc_html__('This email was sent by %s.', 'gform-booking'),
-                            get_bloginfo('name')
+                            esc_html(get_bloginfo('name'))
                         );
                         ?>
                     </p>
@@ -373,21 +373,38 @@ class Confirmation
         $service_name = $service->exists() ? $service->get('name') : __('Appointment', 'gform-booking');
 
         $summary = sprintf(
+            /* translators: %s: Customer name. */
             __('Appointment: %s', 'gform-booking'),
             sanitize_text_field($appointment->get('customer_name'))
         );
 
         // Build description with all available information.
         $description_parts = array();
-        $description_parts[] = sprintf(__('Customer: %s', 'gform-booking'), $appointment->get('customer_name'));
-        $description_parts[] = sprintf(__('Email: %s', 'gform-booking'), $appointment->get('customer_email'));
+        $description_parts[] = sprintf(
+            /* translators: %s: Customer name. */
+            __('Customer: %s', 'gform-booking'),
+            $appointment->get('customer_name')
+        );
+        $description_parts[] = sprintf(
+            /* translators: %s: Customer email address. */
+            __('Email: %s', 'gform-booking'),
+            $appointment->get('customer_email')
+        );
 
         if ($appointment->get('customer_phone')) {
-            $description_parts[] = sprintf(__('Phone: %s', 'gform-booking'), $appointment->get('customer_phone'));
+            $description_parts[] = sprintf(
+                /* translators: %s: Customer phone number. */
+                __('Phone: %s', 'gform-booking'),
+                $appointment->get('customer_phone')
+            );
         }
 
         if ($service_name) {
-            $description_parts[] = sprintf(__('Service: %s', 'gform-booking'), $service_name);
+            $description_parts[] = sprintf(
+                /* translators: %s: Service name. */
+                __('Service: %s', 'gform-booking'),
+                $service_name
+            );
         }
 
         $description = implode('\\n', $description_parts);
