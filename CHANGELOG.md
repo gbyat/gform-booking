@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2025-11-01
+
+- Version update
+
+
 ## [1.0.5] - 2025-10-31
 
 - Version update

@@ -39,11 +39,10 @@ class Confirmation
             get_bloginfo('name')
         );
 
-        $message = $this->get_confirmation_email_content($appointment, $token);
-
-        // Get email sender from service settings.
+        // Get email sender and signature from service settings.
         $service = new \GFormBooking\Service($appointment->get('service_id'));
         $settings = $service->exists() ? $service->get('settings') : array();
+        $message = $this->get_confirmation_email_content($appointment, $token, $settings);
         $from_name = isset($settings['email_from_name']) ? $settings['email_from_name'] : get_bloginfo('name');
         $from_email = isset($settings['email_from_email']) ? $settings['email_from_email'] : get_option('admin_email');
 
@@ -178,7 +177,7 @@ class Confirmation
      * @param string      $token Security token.
      * @return string Email content.
      */
-    private function get_confirmation_email_content($appointment, $token)
+    private function get_confirmation_email_content($appointment, $token, $service_settings = array())
     {
         $date_format = get_option('date_format');
         $time_format = get_option('time_format');
@@ -186,6 +185,10 @@ class Confirmation
         $appointment_date = date_i18n($date_format, strtotime($appointment->get('appointment_date')));
         $start_time = date_i18n($time_format, strtotime($appointment->get('start_time')));
         $end_time = date_i18n($time_format, strtotime($appointment->get('end_time')));
+
+        $service_signature = isset($service_settings['email_signature']) ? $service_settings['email_signature'] : '';
+        $signature_html = $service_signature ? wpautop($service_signature) : '';
+        $cutoff_hours = isset($service_settings['cutoff_hours']) ? absint($service_settings['cutoff_hours']) : 0;
 
         // Create modify/cancel link.
         // Check if a management page is configured
@@ -216,6 +219,11 @@ class Confirmation
         // Create iCal download link.
         $ical_url = self::get_ical_download_url($appointment->get_id());
 
+        $colors = isset($settings['colors']) && is_array($settings['colors']) ? $settings['colors'] : array();
+        $primary = !empty($colors['primary']) ? $colors['primary'] : '#0073aa';
+        $primary_hover = !empty($colors['primary_hover']) ? $colors['primary_hover'] : '#005177';
+        $button_hover = !empty($colors['primary_hover']) ? $colors['primary_hover'] : $primary;
+
         ob_start();
 ?>
         <!DOCTYPE html>
@@ -237,8 +245,8 @@ class Confirmation
                 }
 
                 .header {
-                    background-color: #0073aa;
-                    color: white;
+                    background-color: <?php echo esc_attr($primary); ?>;
+                    color: #ffffff;
                     padding: 20px;
                     text-align: center;
                 }
@@ -250,10 +258,10 @@ class Confirmation
                 }
 
                 .appointment-details {
-                    background-color: white;
+                    background-color: #ffffff;
                     padding: 15px;
                     margin: 15px 0;
-                    border-left: 4px solid #0073aa;
+                    border-left: 4px solid <?php echo esc_attr($primary); ?>;
                 }
 
                 .button {
@@ -262,24 +270,30 @@ class Confirmation
                     margin: 10px 5px;
                     text-decoration: none;
                     border-radius: 3px;
+                    background-color: <?php echo esc_attr($primary); ?>;
+                    color: #ffffff !important;
                 }
 
-                .button-modify {
-                    background-color: #0073aa;
-                    color: white;
+                .button-secondary {
+                    background-color: <?php echo esc_attr($button_hover); ?>;
+                    color: #ffffff !important;
                 }
 
-                .button-cancel {
-                    background-color: #dc3232;
-                    color: white;
+                a {
+                    color: <?php echo esc_attr($primary); ?>;
                 }
 
-                .footer {
+                a:hover,
+                .button:hover,
+                .button-secondary:hover {
+                    color: #ffffff !important;
+                    background-color: <?php echo esc_attr($primary_hover); ?>;
+                }
+
+                .signature {
                     margin-top: 20px;
-                    padding-top: 20px;
-                    border-top: 1px solid #ddd;
-                    font-size: 12px;
-                    color: #666;
+                    font-size: 14px;
+                    color: #444444;
                 }
             </style>
         </head>
@@ -294,38 +308,39 @@ class Confirmation
 
                     <p><?php esc_html_e('Hello', 'gform-booking'); ?> <?php echo esc_html($appointment->get('customer_name')); ?>,</p>
 
-                    <p><?php esc_html_e('Your appointment has been confirmed:', 'gform-booking'); ?></p>
+                    <p><?php esc_html_e('Thank you for your appointment booking:', 'gform-booking'); ?></p>
 
                     <div class="appointment-details">
                         <p><strong><?php esc_html_e('Date:', 'gform-booking'); ?></strong> <?php echo esc_html($appointment_date); ?></p>
                         <p><strong><?php esc_html_e('Time:', 'gform-booking'); ?></strong> <?php echo esc_html($start_time); ?> - <?php echo esc_html($end_time); ?></p>
                     </div>
 
-                    <p><?php esc_html_e('Need to make changes? You can modify or cancel your appointment using the links below:', 'gform-booking'); ?></p>
-
                     <p style="text-align: center;">
-                        <a href="<?php echo esc_url($manage_url); ?>" class="button button-modify">
-                            <?php esc_html_e('Modify or Cancel Appointment', 'gform-booking'); ?>
-                        </a>
-                        <a href="<?php echo esc_url($ical_url); ?>" class="button" style="background-color: #666; color: white;">
+                        <a href="<?php echo esc_url($ical_url); ?>" class="button button-secondary">
                             📅 <?php esc_html_e('Add to Calendar', 'gform-booking'); ?>
                         </a>
                     </p>
 
-                    <p><?php esc_html_e('If you have any questions, please contact us.', 'gform-booking'); ?></p>
+                    <?php if ($cutoff_hours > 0) : ?>
+                        <p><?php printf(esc_html__('Changes and cancellations are possible until %d hours before the appointment.', 'gform-booking'), $cutoff_hours); ?></p>
+                    <?php endif; ?>
+
+                    <p><?php esc_html_e('If you need to review or adjust your booking, please use the link below:', 'gform-booking'); ?></p>
+
+                    <p style="text-align: center;">
+                        <a href="<?php echo esc_url($manage_url); ?>" class="button">
+                            <?php esc_html_e('Manage Appointment', 'gform-booking'); ?>
+                        </a>
+                    </p>
+
+                    <p><?php esc_html_e('If you have any questions, please feel free to contact us.', 'gform-booking'); ?></p>
                 </div>
 
-                <div class="footer">
-                    <p>
-                        <?php
-                        printf(
-                            /* translators: %s: Site name */
-                            esc_html__('This email was sent by %s.', 'gform-booking'),
-                            esc_html(get_bloginfo('name'))
-                        );
-                        ?>
-                    </p>
-                </div>
+                <?php if (! empty($signature_html)) : ?>
+                    <div class="signature">
+                        <?php echo wp_kses_post($signature_html); ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </body>
 

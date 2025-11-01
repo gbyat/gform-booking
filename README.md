@@ -1,6 +1,6 @@
 # GF Booking - Appointment Booking for Gravity Forms
 
-**Stable tag:** 1.0.5
+**Stable tag:** 1.1.0
 
 A flexible appointment booking system for WordPress Gravity Forms with multiple calendars, customizable time slots, and email confirmations.
 

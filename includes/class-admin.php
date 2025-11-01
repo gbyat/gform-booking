@@ -283,6 +283,7 @@ class Admin
         // Email sender settings.
         $email_from_name = isset($settings['email_from_name']) ? $settings['email_from_name'] : get_bloginfo('name');
         $email_from_email = isset($settings['email_from_email']) ? $settings['email_from_email'] : get_option('admin_email');
+        $email_signature = isset($settings['email_signature']) ? $settings['email_signature'] : '';
     ?>
         <div class="wrap">
             <h1><?php echo esc_html($form_title); ?></h1>
@@ -343,6 +344,24 @@ class Admin
                         <td>
                             <input type="email" id="email_from_email" name="email_from_email" value="<?php echo esc_attr($email_from_email); ?>" class="regular-text">
                             <p class="description"><?php esc_html_e('The email address that appears as sender in confirmation emails.', 'gform-booking'); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="email_signature_content"><?php esc_html_e('Email Signature', 'gform-booking'); ?></label></th>
+                        <td>
+                            <?php
+                            wp_editor(
+                                $email_signature,
+                                'email_signature_content',
+                                array(
+                                    'textarea_name' => 'email_signature',
+                                    'textarea_rows' => 5,
+                                    'media_buttons' => false,
+                                    'teeny' => true,
+                                )
+                            );
+                            ?>
+                            <p class="description"><?php esc_html_e('Optional signature appended to confirmation emails for this service. HTML links are allowed.', 'gform-booking'); ?></p>
                         </td>
                     </tr>
                     <tr>
@@ -1185,6 +1204,7 @@ class Admin
             // Email sender settings.
             $email_from_name = sanitize_text_field($_POST['email_from_name']);
             $email_from_email = sanitize_email($_POST['email_from_email']);
+            $email_signature = isset($_POST['email_signature']) ? wp_kses_post($_POST['email_signature']) : '';
 
             // Max participants setting.
             $max_participants = isset($_POST['max_participants']) ? absint($_POST['max_participants']) : 1;
@@ -1293,6 +1313,7 @@ class Admin
                 'notify_user_id' => $notify_user_id,
                 'email_from_name' => $email_from_name,
                 'email_from_email' => $email_from_email,
+                'email_signature' => $email_signature,
                 'daily_time_windows' => $daily_time_windows,
                 'cutoff_hours' => $cutoff_hours,
             );

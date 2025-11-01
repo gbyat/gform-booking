@@ -4,7 +4,7 @@
  * Plugin Name:       GF Booking
  * Plugin URI:        https://github.com/gbyat/gform-booking
  * Description:       Appointment booking system for Gravity Forms with multiple calendars and flexible time slots.
- * Version: 1.0.5
+ * Version: 1.1.0
  * Author:            webentwicklerin, Gabriele Laesser
  * Author URI:        https://webentwicklerin.at
  * License:           GPL-2.0-or-later
@@ -25,7 +25,7 @@ if (! defined('ABSPATH')) {
 }
 
 // Define plugin constants.
-define('GFORM_BOOKING_VERSION', '1.0.5');
+define('GFORM_BOOKING_VERSION', '1.1.0');
 define('GFORM_BOOKING_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('GFORM_BOOKING_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('GFORM_BOOKING_PLUGIN_FILE', __FILE__);
